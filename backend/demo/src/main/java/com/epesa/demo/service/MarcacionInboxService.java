@@ -38,4 +38,7 @@ public class MarcacionInboxService {
         }
         return procesados;
     }
+    public List<MarcacionInbox> obtenerTodas() {
+        return inboxRepository.findAll();
+    }
 }
