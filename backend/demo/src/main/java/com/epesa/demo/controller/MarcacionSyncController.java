@@ -23,4 +23,8 @@ public class MarcacionSyncController {
         List<UUID> procesados = inboxService.procesarLote(request);
         return ResponseEntity.ok(new SyncResponseDto("SUCCESS", procesados));
     }
+    @GetMapping("/marcaciones")
+    public ResponseEntity<List<com.epesa.demo.model.MarcacionInbox>> verTodas() {
+        return ResponseEntity.ok(inboxService.obtenerTodas());
+    }
 }
