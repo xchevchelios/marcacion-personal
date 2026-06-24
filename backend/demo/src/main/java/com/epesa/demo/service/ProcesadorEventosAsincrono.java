@@ -70,11 +70,12 @@ public class ProcesadorEventosAsincrono {
                 //4. filtro de recursos humanos
                 boolean requiereRevision = false;
                 String motivo = null;
-                List<AsignacionObra> asignaciones = asignacionRepository.findByEmpleadoIdAndObraId(empleadoId, obraId);
-                if (asignaciones.isEmpty()) {
+                boolean tieneAsignacionActiva = obraService.verificarAsignacionActiva(empleadoId, obraId, marcacion.getTimestampDispositivo());
+                if (!tieneAsignacionActiva) {
                     requiereRevision = true;
-                    motivo = "Empleado no cuenta con asignación registrada para esta obra.";
+                    motivo = "Empleado sin asignación activa en la obra para la fecha indicada.";
                 }
+
 
                 // 5. Consolidación: Guardar en la tabla final limpia de asistencias
                 asistenciaRepository.save(Asistencia.builder()

@@ -24,8 +24,17 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
+                // 1. Endpoints Públicos
                 .requestMatchers("/api/v1/auth/**").permitAll() 
+                
+                // 2. Acceso Exclusivo de Recursos Humanos (Control Total)
                 .requestMatchers("/api/v1/obras/**").hasRole("RRHH")
+                .requestMatchers("/api/v1/admin/empleados/**").hasRole("RRHH")
+                
+                // 3. Acceso Compartido (RRHH, Jefes de Obra y Residentes)
+                .requestMatchers("/api/v1/asignaciones/**").hasAnyRole("RRHH", "JEFE_OBRA", "RESIDENTE")
+                
+                // 4. Todo lo demás requiere autenticación general (como la sincronización del Inbox)
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
