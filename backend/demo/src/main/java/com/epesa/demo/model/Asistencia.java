@@ -37,4 +37,13 @@ public class Asistencia {
 
     @Column(nullable = false)
     private LocalDateTime fechaProcesamiento;
+
+    @Column(nullable = false)
+    private UUID empleadoId;
+
+    @Column(nullable = false)
+    private boolean requiereRevision; // Flag de Soft Fail
+
+    @Column(length = 255)
+    private String motivoRevision; // Explicación del flag para RRHH
 }

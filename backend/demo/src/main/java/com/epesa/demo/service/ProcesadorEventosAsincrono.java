@@ -2,8 +2,10 @@ package com.epesa.demo.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.epesa.demo.model.AsignacionObra;
 import com.epesa.demo.model.Asistencia;
 import com.epesa.demo.model.MarcacionInbox;
+import com.epesa.demo.repository.AsignacionObraRepository;
 import com.epesa.demo.repository.AsistenciaRepository;
 import com.epesa.demo.repository.MarcacionInboxRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,7 @@ public class ProcesadorEventosAsincrono {
     private final SeguridadHardwareService hardwareService;
     private final ObraService obraService;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final AsignacionObraRepository asignacionRepository; 
 
     // Se ejecuta automáticamente cada 10 segundos
     @Scheduled(fixedDelay = 10000)
@@ -43,45 +46,53 @@ public class ProcesadorEventosAsincrono {
             try {
                 // 1. Parsear el payload dinámico enviado por el cliente móvil
                 JsonNode json = objectMapper.readTree(marcacion.getPayloadRaw());
-                
                 String firma = json.get("firma_hardware").asText();
                 UUID obraId = UUID.fromString(json.get("obraId").asText());
+                UUID empleadoId = UUID.fromString(json.get("empleadoId").asText()); // NUEVO
                 Double lat = json.get("lat").asDouble();
                 Double lng = json.get("lng").asDouble();
 
                 // 2. Filtro de Seguridad: Módulo 4 (Zero Trust)
                 boolean hardwareValido = hardwareService.validarFirmaZeroTrust(marcacion.getDeviceId(), firma);
-                if (!hardwareValido) {
+                if (!hardwareService.validarFirmaZeroTrust(marcacion.getDeviceId(), firma)) {
                     marcacion.setEstado(MarcacionInbox.EstadoEvento.ERROR);
                     inboxRepository.save(marcacion);
-                    log.warn("Evento {} RECHAZADO: Falla de firma Zero Trust.", marcacion.getEventId());
                     continue;
                 }
 
                 // 3. Filtro Geográfico: Módulo 2 (PostGIS / JTS)
                 boolean ubicacionValida = obraService.validarUbicacion(obraId, lat, lng).isEsValido();
-                if (!ubicacionValida) {
+                if (!obraService.validarUbicacion(obraId, lat, lng).isEsValido()) {
                     marcacion.setEstado(MarcacionInbox.EstadoEvento.ERROR);
                     inboxRepository.save(marcacion);
-                    log.warn("Evento {} RECHAZADO: Fuera de la geocerca de la obra.", marcacion.getEventId());
                     continue;
                 }
+                //4. filtro de recursos humanos
+                boolean requiereRevision = false;
+                String motivo = null;
+                List<AsignacionObra> asignaciones = asignacionRepository.findByEmpleadoIdAndObraId(empleadoId, obraId);
+                if (asignaciones.isEmpty()) {
+                    requiereRevision = true;
+                    motivo = "Empleado no cuenta con asignación registrada para esta obra.";
+                }
 
-                // 4. Consolidación: Guardar en la tabla final limpia de asistencias
+                // 5. Consolidación: Guardar en la tabla final limpia de asistencias
                 asistenciaRepository.save(Asistencia.builder()
                         .eventId(marcacion.getEventId())
                         .deviceId(marcacion.getDeviceId())
                         .obraId(obraId)
+                        .empleadoId(empleadoId) // Guardamos quién marcó
                         .fechaHoraReal(marcacion.getTimestampDispositivo())
                         .latitud(lat)
                         .longitud(lng)
                         .fechaProcesamiento(java.time.LocalDateTime.now())
+                        .requiereRevision(requiereRevision) // Guardamos el estado del flag
+                        .motivoRevision(motivo)
                         .build());
 
-                // 5. Éxito: Actualizar estado del Inbox
+                // 6. Éxito: Actualizar estado del Inbox
                 marcacion.setEstado(MarcacionInbox.EstadoEvento.PROCESSED);
                 inboxRepository.save(marcacion);
-                log.info("Evento {} PROCESADO exitosamente.", marcacion.getEventId());
 
             } catch (Exception e) {
                 log.error("Error crítico procesando evento {}: {}", marcacion.getEventId(), e.getMessage());
