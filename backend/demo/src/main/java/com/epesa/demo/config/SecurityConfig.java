@@ -20,18 +20,24 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            .cors(cors -> {})
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/**").permitAll() 
+                // 1. Públicas primero
+                .requestMatchers("/api/v1/auth/**").permitAll()
+                
+                // 2. Protegidas por roles
                 .requestMatchers("/api/v1/obras/**").hasRole("RRHH")
                 .requestMatchers("/api/v1/admin/empleados/**").hasRole("RRHH")
                 .requestMatchers("/api/v1/asignaciones/**").hasAnyRole("RRHH", "JEFE_OBRA", "RESIDENTE")
+                .requestMatchers("/api/v1/admin/dashboard/**").hasAnyRole("RRHH", "JEFE_OBRA", "RESIDENTE")
+                
+                // 3. SOLO ESTO AL FINAL. NADA MÁS DEBE IR ABAJO.
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-            // Ya no declaramos .authenticationProvider(), Spring lo resuelve solo
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

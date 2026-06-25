@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface AsignacionObraRepository extends JpaRepository<AsignacionObra, UUID> {
     List<AsignacionObra> findByEmpleadoIdAndObraId(UUID empleadoId, UUID obraId);
+    List<AsignacionObra> findByEmpleadoId(UUID empleadoId);
 }
