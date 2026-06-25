@@ -27,7 +27,7 @@ public class ProcesadorEventosAsincrono {
     private final SeguridadHardwareService hardwareService;
     private final ObraService obraService;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final AsignacionObraRepository asignacionRepository; 
+    private final AsignacionObraService asignacionObraService;
 
     // Se ejecuta automáticamente cada 10 segundos
     @Scheduled(fixedDelay = 10000)
@@ -70,10 +70,14 @@ public class ProcesadorEventosAsincrono {
                 //4. filtro de recursos humanos
                 boolean requiereRevision = false;
                 String motivo = null;
-                boolean tieneAsignacionActiva = obraService.verificarAsignacionActiva(empleadoId, obraId, marcacion.getTimestampDispositivo());
+
+                // ¡AQUÍ ESTÁ LA CLAVE! Llama a asignacionObraService, NO a obraService
+                boolean tieneAsignacionActiva = asignacionObraService.verificarAsignacionActiva(empleadoId, obraId, marcacion.getTimestampDispositivo());
+
                 if (!tieneAsignacionActiva) {
                     requiereRevision = true;
                     motivo = "Empleado sin asignación activa en la obra para la fecha indicada.";
+                    log.info("Marcación del empleado {} guardada con FLAG de revisión.", empleadoId);
                 }
 
 

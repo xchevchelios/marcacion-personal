@@ -8,6 +8,8 @@ import com.epesa.demo.repository.ObraRepository;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Polygon;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -36,5 +38,10 @@ public class ObraService {
         
         boolean dentro = geocercaService.puntoDentroDePoligono(lat, lng, obra.getAreaGeocerca());
         return new ValidacionEspacialResult(dentro, dentro ? "Punto dentro de la geocerca" : "Punto fuera del área permitida");
+    }
+
+    public boolean verificarAsignacionActiva(UUID empleadoId, UUID obraId, LocalDateTime timestampDispositivo) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'verificarAsignacionActiva'");
     }
 }

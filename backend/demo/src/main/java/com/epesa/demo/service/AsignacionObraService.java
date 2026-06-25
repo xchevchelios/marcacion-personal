@@ -17,6 +17,10 @@ public class AsignacionObraService {
 
     private final AsignacionObraRepository asignacionRepository;
 
+    /**
+     * Registra la asignación de un empleado a una obra determinada.
+     * Si no se especifica una fecha de inicio, se asume el día de hoy de forma automática.
+     */
     @Transactional
     public AsignacionObra asignarEmpleado(AsignacionObra asignacion) {
         if (asignacion.getFechaInicio() == null) {
@@ -25,7 +29,14 @@ public class AsignacionObraService {
         return asignacionRepository.save(asignacion);
     }
 
-    // El orquestador consumirá este método para evaluar el flag de revisión
+    /**
+     * Verifica si el empleado cuenta con una asignación activa para la obra indicada
+     * en el momento exacto en que se realizó la marcación en campo.
+     * * Regla de negocio: 
+     * - La fecha de marcación debe ser igual o posterior a la fecha de inicio.
+     * - Si la fecha de fin es null, la asignación sigue vigente de manera indefinida.
+     * - Si tiene fecha de fin, la marcación no debe superar ese límite.
+     */
     public boolean verificarAsignacionActiva(UUID empleadoId, UUID obraId, LocalDateTime fechaMarcacion) {
         LocalDate fecha = fechaMarcacion.toLocalDate();
         List<AsignacionObra> asignaciones = asignacionRepository.findByEmpleadoIdAndObraId(empleadoId, obraId);
