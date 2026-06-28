@@ -1,61 +1,80 @@
-// =============================================
-// EPESA - Lógica de Autenticación
-// =============================================
+// ============================================================
+// EPESA — Autenticación
+// ============================================================
 
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('login-form');
-  const errorMsg = document.getElementById('error-msg');
-  const btnLogin = document.getElementById('btn-login');
-  const btnText = document.getElementById('btn-text');
-  const btnSpinner = document.getElementById('btn-spinner');
+  if (!form) return; // Este script se carga en index.html solamente
 
+  // Si ya hay sesión activa, ir al dashboard
   if (localStorage.getItem('jwt_token')) {
-    window.location.href = '../templates/dashboard.html';
+    goToDashboard();
     return;
   }
 
+  const errorEl   = document.getElementById('error-msg');
+  const btnLogin  = document.getElementById('btn-login');
+  const btnText   = document.getElementById('btn-text');
+  const btnSpin   = document.getElementById('btn-spinner');
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    errorMsg.classList.add('hidden');
+    errorEl.classList.add('hidden');
 
-    const correo = document.getElementById('correo').value.trim();
+    const correo   = document.getElementById('correo').value.trim();
     const password = document.getElementById('password').value;
 
-    // Estado de carga
-    btnText.textContent = 'Ingresando...';
-    btnSpinner.classList.remove('hidden');
-    btnLogin.disabled = true;
+    if (!correo || !password) {
+      showError('Completá todos los campos.');
+      return;
+    }
+
+    setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
+      const res = await fetch(`${API_BASE_URL}/auth/login`, {
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ correo, password }),
+        body:    JSON.stringify({ correo, password }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('jwt_token', data.token);
-        localStorage.setItem('user_role', data.rol);
-        localStorage.setItem('user_name', data.nombre || correo);
-        window.location.href = '../templates/dashboard.html';
+      if (res.ok) {
+        const data = await res.json();
+        localStorage.setItem('jwt_token',  data.token);
+        localStorage.setItem('user_role',  data.rol);
+        localStorage.setItem('user_name',  data.nombre ?? correo);
+        goToDashboard();
       } else {
-        const err = await response.json().catch(() => ({}));
-        errorMsg.textContent = err.message || 'Credenciales incorrectas. Revisá tu correo y contraseña.';
-        errorMsg.classList.remove('hidden');
+        const err = await res.json().catch(() => ({}));
+        showError(err.message ?? 'Credenciales incorrectas.');
       }
-    } catch (error) {
-      errorMsg.textContent = 'No se pudo conectar con el servidor. Verificá que el backend esté activo.';
-      errorMsg.classList.remove('hidden');
+    } catch {
+      showError('No se pudo conectar con el servidor. Verificá que el backend esté activo.');
     } finally {
-      btnText.textContent = 'Ingresar';
-      btnSpinner.classList.add('hidden');
-      btnLogin.disabled = false;
+      setLoading(false);
     }
   });
+
+  function showError(msg) {
+    errorEl.textContent = msg;
+    errorEl.classList.remove('hidden');
+  }
+
+  function setLoading(on) {
+    btnLogin.disabled      = on;
+    btnText.textContent    = on ? 'Ingresando…' : 'Ingresar';
+    btnSpin.classList.toggle('hidden', !on);
+  }
 });
+
+function goToDashboard() {
+  // index.html está en /frontend/, dashboard en /frontend/templates/
+  const base = window.location.href.replace(/\/index\.html.*$/, '');
+  window.location.href = `${base}/templates/dashboard.html`;
+}
 
 function logout() {
   localStorage.clear();
-  window.location.href = '../templates/index.html';
+  // dashboard.html está en templates/, index.html un nivel arriba
+  window.location.href = '../index.html';
 }

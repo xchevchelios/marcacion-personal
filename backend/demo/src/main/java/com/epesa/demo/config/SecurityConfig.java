@@ -23,23 +23,18 @@ public class SecurityConfig {
             .cors(cors -> {})
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
-                // 1. Públicas primero
                 .requestMatchers("/api/v1/auth/**").permitAll()
-                
-                // 2. Protegidas por roles
-                .requestMatchers("/api/v1/obras/**").hasRole("RRHH")
-                .requestMatchers("/api/v1/admin/empleados/**").hasRole("RRHH")
+                .requestMatchers("/api/v1/obras/**").hasAnyRole("RRHH")
+                .requestMatchers("/api/v1/admin/empleados/**").hasAnyRole("RRHH")
                 .requestMatchers("/api/v1/asignaciones/**").hasAnyRole("RRHH", "JEFE_OBRA", "RESIDENTE")
                 .requestMatchers("/api/v1/admin/dashboard/**").hasAnyRole("RRHH", "JEFE_OBRA", "RESIDENTE")
-                
-                // 3. SOLO ESTO AL FINAL. NADA MÁS DEBE IR ABAJO.
+                .requestMatchers("/api/v1/admin/obras/**").hasRole("RRHH")
                 .anyRequest().authenticated()
             )
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
 }

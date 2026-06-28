@@ -1,7 +1,6 @@
 package com.epesa.demo.controller;
 
 import com.epesa.demo.dto.AsistenciaResponseDTO;
-import com.epesa.demo.model.Asistencia;
 import com.epesa.demo.model.Empleado;
 import com.epesa.demo.service.AdminDashboardService;
 import lombok.RequiredArgsConstructor;

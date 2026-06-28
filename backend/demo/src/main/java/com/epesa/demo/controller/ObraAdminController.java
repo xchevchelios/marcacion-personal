@@ -3,7 +3,6 @@ package com.epesa.demo.controller;
 import com.epesa.demo.dto.ObraRequestDto;
 import com.epesa.demo.dto.ObraResponseDto;
 import com.epesa.demo.dto.ValidacionEspacialResult;
-import com.epesa.demo.model.Obra;
 import com.epesa.demo.service.ObraService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

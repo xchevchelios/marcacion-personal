@@ -19,6 +19,7 @@ public class JwtService {
     // Llave secreta para firmar los tokens (En producción debe ir en application.properties)
     private static final String SECRET_KEY = "EstaEsUnaClaveSecretaMuyLargaParaElSistemaDeMarcacionDeLaEmpresa2026";
 
+    @SuppressWarnings("null")
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
@@ -46,6 +47,7 @@ public class JwtService {
         return extractExpiration(token).before(new Date());
     }
 
+    @SuppressWarnings("null")
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
@@ -56,7 +58,7 @@ public class JwtService {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parserBuilder()
+        return Jwts.parser()
                 .setSigningKey(getSignInKey())
                 .build()
                 .parseClaimsJws(token)

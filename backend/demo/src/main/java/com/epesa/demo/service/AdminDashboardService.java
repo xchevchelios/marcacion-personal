@@ -63,6 +63,7 @@ public class AdminDashboardService {
         return convertirADTO(asistenciaRepository.save(asistencia));
     }
 
+    @SuppressWarnings("null")
     private List<UUID> obtenerObrasDelAdministrador(UUID empleadoId) {
         return asignacionRepository.findByEmpleadoId(empleadoId).stream()
                 .map(AsignacionObra::getObraId)

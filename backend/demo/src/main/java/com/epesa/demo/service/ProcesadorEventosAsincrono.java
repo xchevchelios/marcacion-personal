@@ -2,10 +2,8 @@ package com.epesa.demo.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.epesa.demo.model.AsignacionObra;
 import com.epesa.demo.model.Asistencia;
 import com.epesa.demo.model.MarcacionInbox;
-import com.epesa.demo.repository.AsignacionObraRepository;
 import com.epesa.demo.repository.AsistenciaRepository;
 import com.epesa.demo.repository.MarcacionInboxRepository;
 import lombok.RequiredArgsConstructor;
@@ -52,16 +50,14 @@ public class ProcesadorEventosAsincrono {
                 Double lat = json.get("lat").asDouble();
                 Double lng = json.get("lng").asDouble();
 
-                // 2. Filtro de Seguridad: Módulo 4 (Zero Trust)
-                boolean hardwareValido = hardwareService.validarFirmaZeroTrust(marcacion.getDeviceId(), firma);
+                hardwareService.validarFirmaZeroTrust(marcacion.getDeviceId(), firma);
                 if (!hardwareService.validarFirmaZeroTrust(marcacion.getDeviceId(), firma)) {
                     marcacion.setEstado(MarcacionInbox.EstadoEvento.ERROR);
                     inboxRepository.save(marcacion);
                     continue;
                 }
 
-                // 3. Filtro Geográfico: Módulo 2 (PostGIS / JTS)
-                boolean ubicacionValida = obraService.validarUbicacion(obraId, lat, lng).isEsValido();
+                obraService.validarUbicacion(obraId, lat, lng).isEsValido();
                 if (!obraService.validarUbicacion(obraId, lat, lng).isEsValido()) {
                     marcacion.setEstado(MarcacionInbox.EstadoEvento.ERROR);
                     inboxRepository.save(marcacion);

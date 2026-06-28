@@ -41,7 +41,6 @@ public class ObraService {
     }
 
     public boolean verificarAsignacionActiva(UUID empleadoId, UUID obraId, LocalDateTime timestampDispositivo) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'verificarAsignacionActiva'");
+        return false;
     }
 }

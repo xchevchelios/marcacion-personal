@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EPESA — Dashboard</title>
-  <!-- Protección de ruta: redirige a login si no hay token -->
+  <!-- Protección de ruta: sin token → login -->
   <script>
     if (!localStorage.getItem('jwt_token')) {
       window.location.href = '../templates/index.html';
@@ -13,14 +13,19 @@
   <link rel="stylesheet" href="../css/style.css" />
   <script src="../js/config.js"></script>
   <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/modules/excepciones.js"></script>
+  <script src="../js/modules/asistencias.js"></script>
+  <script src="../js/modules/empleados.js"></script>
+  <script src="../js/modules/obras.js"></script>
+  <script src="../js/modules/asignaciones.js"></script>
+  <script src="../js/modules/confirm.js"></script>
 </head>
 <body>
 
 <div class="app-layout">
 
-  <!-- ════════════════════════════
-       SIDEBAR
-  ════════════════════════════ -->
+  <!-- ════════════ SIDEBAR ════════════ -->
   <aside class="sidebar" id="sidebar">
 
     <div class="sidebar-header">
@@ -31,204 +36,341 @@
         </svg>
       </div>
       <div class="sidebar-brand">
-        EPESA
+        <strong>EPESA</strong>
         <span>Control de Asistencias</span>
       </div>
     </div>
 
     <nav class="sidebar-nav">
 
-      <div class="nav-section-label">Principal</div>
+      <div class="nav-section">Panel</div>
 
-      <a href="#" class="nav-link active">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-          <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
-        </svg>
-        Dashboard
-      </a>
-
-      <a href="#" class="nav-link">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
-        Empleados
-      </a>
-
-      <a href="#" class="nav-link">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
-          <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-        </svg>
-        Asistencias
-      </a>
-
-      <a href="#" class="nav-link">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-        </svg>
-        Marcaciones
-      </a>
-
-      <!-- Sección visible solo para RRHH -->
-      <div class="nav-section-label rrhh-only">Administración</div>
-
-      <a href="#" class="nav-link rrhh-only">
+      <button class="nav-link" data-view="excepciones" onclick="goToView('excepciones')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <circle cx="12" cy="16" r=".5" fill="currentColor"/>
         </svg>
         Excepciones
-      </a>
+        <span class="nav-badge" id="badge-excepciones"></span>
+      </button>
 
-      <a href="#" class="nav-link rrhh-only">
+      <button class="nav-link" data-view="asistencias" onclick="goToView('asistencias')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
-          <line x1="6" y1="20" x2="6" y2="14"/>
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
         </svg>
-        Reportes
-      </a>
+        Asistencias
+      </button>
 
-      <a href="#" class="nav-link rrhh-only">
+      <div class="nav-section rrhh-only">Administración RRHH</div>
+
+      <button class="nav-link rrhh-only" data-view="empleados" onclick="goToView('empleados')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
         </svg>
-        Configuración
-      </a>
+        Empleados
+      </button>
 
-      <div class="nav-section-label">Obras</div>
-
-      <a href="#" class="nav-link">
+      <button class="nav-link rrhh-only" data-view="obras" onclick="goToView('obras')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
           <polyline points="9 22 9 12 15 12 15 22"/>
         </svg>
-        Proyectos
-      </a>
+        Obras
+      </button>
+
+      <button class="nav-link rrhh-only" data-view="asignaciones" onclick="goToView('asignaciones')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="8" y1="6" x2="21" y2="6"/>
+          <line x1="8" y1="12" x2="21" y2="12"/>
+          <line x1="8" y1="18" x2="21" y2="18"/>
+          <line x1="3" y1="6" x2="3.01" y2="6"/>
+          <line x1="3" y1="12" x2="3.01" y2="12"/>
+          <line x1="3" y1="18" x2="3.01" y2="18"/>
+        </svg>
+        Asignaciones
+      </button>
 
     </nav>
 
     <div class="sidebar-footer">
-      <a href="#" class="nav-link" onclick="logout(); return false;">
+      <button class="nav-link" onclick="logout()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-          <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
         </svg>
         Cerrar sesión
-      </a>
+      </button>
     </div>
 
   </aside>
 
-  <!-- ════════════════════════════
-       ÁREA PRINCIPAL
-  ════════════════════════════ -->
+  <!-- ════════════ ÁREA PRINCIPAL ════════════ -->
   <div class="main-area">
 
     <!-- Topbar -->
     <header class="topbar">
       <div class="topbar-left">
-        <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menú">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        <button id="menu-toggle" aria-label="Abrir menú">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
           </svg>
         </button>
-        <span class="topbar-title">Panel de Control</span>
+        <span class="topbar-title" id="topbar-title">Dashboard</span>
       </div>
-
       <div class="topbar-right">
-        <!-- Indicador de pendientes (elemento firma) -->
-        <div class="pending-badge">
-          <span>Pendientes</span>
-          <span class="pending-badge-count" id="pending-indicator">—</span>
-        </div>
-
-        <div class="user-menu">
-          <div class="user-avatar">U</div>
-          <div class="user-info">
-            <div class="user-info-name" id="user-name">Cargando...</div>
-            <div class="user-info-role" id="user-role-badge"></div>
+        <div class="user-chip">
+          <div class="user-avatar" id="user-avatar">U</div>
+          <div>
+            <div class="user-info-name"  id="user-name">Cargando…</div>
+            <div class="user-role-label" id="user-role-label"></div>
           </div>
         </div>
-
         <button class="btn-logout" onclick="logout()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
           </svg>
           Salir
         </button>
       </div>
     </header>
 
-    <!-- Contenido -->
+    <!-- Vistas SPA -->
     <main class="content">
 
-      <div class="content-header">
-        <h2>Excepciones de Asistencia</h2>
-        <p>Marcaciones que requieren revisión y resolución manual</p>
+      <!-- ══ VISTA: EXCEPCIONES ══ -->
+      <div id="view-excepciones" class="view">
+        <div class="view-header">
+          <h2>Excepciones Pendientes</h2>
+          <p>Marcaciones que requieren revisión y resolución manual</p>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Listado de excepciones</span>
+            <div class="panel-actions">
+              <button class="btn-sm btn-sm-outline" onclick="cargarExcepciones()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 4 23 10 17 10"/>
+                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                </svg>
+                Actualizar
+              </button>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Empleado</th>
+                  <th>Obra</th>
+                  <th>Fecha y Hora</th>
+                  <th>Motivo</th>
+                  <th>Estado</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-excepciones"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
-      <!-- Tarjetas de estadísticas -->
-      <div class="stats-row">
-        <div class="stat-card">
-          <div class="stat-label">Pendientes</div>
-          <div class="stat-value accent" id="excepciones-counter">—</div>
+      <!-- ══ VISTA: ASISTENCIAS ══ -->
+      <div id="view-asistencias" class="view">
+        <div class="view-header">
+          <h2>Consolidado de Asistencias</h2>
+          <p>Historial completo de marcaciones registradas</p>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Resueltas hoy</div>
-          <div class="stat-value">—</div>
+
+        <div class="filters-bar">
+          <div class="form-group">
+            <label>Obra</label>
+            <select id="filtro-obra"><option value="">Todas las obras</option></select>
+          </div>
+          <div class="form-group">
+            <label>Desde</label>
+            <input type="date" id="filtro-desde" />
+          </div>
+          <div class="form-group">
+            <label>Hasta</label>
+            <input type="date" id="filtro-hasta" />
+          </div>
+          <div class="filter-actions">
+            <button class="btn-sm btn-sm-green" onclick="aplicarFiltrosAsistencias()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+              </svg>
+              Filtrar
+            </button>
+            <button class="btn-sm btn-sm-outline" onclick="limpiarFiltros()">Limpiar</button>
+          </div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Empleados afectados</div>
-          <div class="stat-value">—</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Obras involucradas</div>
-          <div class="stat-value">—</div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Registro de asistencias</span>
+            <div class="panel-actions">
+              <button class="btn-sm btn-sm-outline" onclick="cargarAsistencias()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 4 23 10 17 10"/>
+                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                </svg>
+                Actualizar
+              </button>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Empleado</th>
+                  <th>Obra</th>
+                  <th>Entrada</th>
+                  <th>Salida</th>
+                  <th>Hs. Trabajadas</th>
+                  <th>Estado</th>
+                  <th>Motivo</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-asistencias"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      <!-- Panel de tabla -->
-      <div class="panel">
-        <div class="panel-header">
-          <span class="panel-title">Excepciones pendientes de resolución</span>
-          <button class="btn-refresh" onclick="cargarExcepciones()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="23 4 23 10 17 10"/>
-              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-            </svg>
-            Actualizar
-          </button>
+      <!-- ══ VISTA: EMPLEADOS ══ -->
+      <div id="view-empleados" class="view">
+        <div class="view-header">
+          <h2>Gestión de Empleados</h2>
+          <p>Alta, modificación y baja de personal</p>
         </div>
-
-        <!-- Empty state -->
-        <div id="empty-state" class="empty-state hidden">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            <path d="M9 12l2 2 4-4"/>
-          </svg>
-          <h3>Sin excepciones pendientes</h3>
-          <p>Todas las asistencias han sido revisadas correctamente.</p>
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Personal registrado</span>
+            <div class="panel-actions">
+              <button class="btn-sm btn-sm-outline" onclick="cargarEmpleados()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 4 23 10 17 10"/>
+                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                </svg>
+                Actualizar
+              </button>
+              <button class="btn-sm btn-sm-green rrhh-only" data-admin-action onclick="abrirModalNuevoEmpleado()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Nuevo Empleado
+              </button>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nombre Completo</th>
+                  <th>Documento</th>
+                  <th>Rol</th>
+                  <th>Estado</th>
+                  <th class="rrhh-only">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-empleados"></tbody>
+            </table>
+          </div>
         </div>
+      </div>
 
-        <!-- Tabla -->
-        <div id="table-wrapper" class="table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>Empleado</th>
-                <th>Obra</th>
-                <th>Fecha</th>
-                <th>Tipo</th>
-                <th>Motivo de revisión</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="tabla-asistencias">
-              <!-- Filas inyectadas por JS -->
-            </tbody>
-          </table>
+      <!-- ══ VISTA: OBRAS ══ -->
+      <div id="view-obras" class="view">
+        <div class="view-header">
+          <h2>Gestión de Obras</h2>
+          <p>Proyectos y sitios de trabajo disponibles</p>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Obras registradas</span>
+            <div class="panel-actions">
+              <button class="btn-sm btn-sm-outline" onclick="cargarObras()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 4 23 10 17 10"/>
+                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                </svg>
+                Actualizar
+              </button>
+              <button class="btn-sm btn-sm-green rrhh-only" data-admin-action onclick="abrirModalNuevaObra()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Nueva Obra
+              </button>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Ubicación</th>
+                  <th>Descripción</th>
+                  <th>Estado</th>
+                  <th class="rrhh-only">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-obras"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ VISTA: ASIGNACIONES ══ -->
+      <div id="view-asignaciones" class="view">
+        <div class="view-header">
+          <h2>Asignaciones de Personal</h2>
+          <p>Gestión de quién está asignado a cada obra</p>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Asignaciones activas</span>
+            <div class="panel-actions">
+              <button class="btn-sm btn-sm-outline" onclick="cargarAsignaciones()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 4 23 10 17 10"/>
+                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                </svg>
+                Actualizar
+              </button>
+              <button class="btn-sm btn-sm-green rrhh-only" data-admin-action onclick="abrirModalNuevaAsignacion()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Nueva Asignación
+              </button>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Empleado</th>
+                  <th>Obra</th>
+                  <th>Fecha Asignación</th>
+                  <th class="rrhh-only">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-asignaciones"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -236,57 +378,201 @@
   </div>
 </div>
 
-<!-- ════════════════════════════
-     MODAL DE RESOLUCIÓN
-════════════════════════════ -->
-<div class="modal-overlay hidden" id="modal-overlay">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+<!-- ════════════ MODALES ════════════ -->
 
+<!-- Modal: Resolver Excepción -->
+<div class="modal-overlay hidden" id="modal-excepcion">
+  <div class="modal">
     <div class="modal-header">
-      <h3 id="modal-title">Resolver excepción</h3>
-      <button class="btn-close" onclick="cerrarModal()" aria-label="Cerrar">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <h3>Resolver Excepción</h3>
+      <button class="btn-close" onclick="closeModal('modal-excepcion')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
       </button>
     </div>
-
     <div class="modal-body">
       <div class="modal-info">
-        Resolución para: <strong id="modal-empleado-nombre">—</strong>
+        Empleado: <strong id="exc-empleado-nombre">—</strong>
       </div>
-
-      <label for="modal-nota">Nota de resolución <span style="color:var(--danger)">*</span></label>
-      <textarea
-        id="modal-nota"
-        placeholder="Describí el motivo de la decisión tomada (aprobación o rechazo)…"
-      ></textarea>
-
-      <div id="modal-error" class="modal-error hidden"></div>
+      <div class="form-group">
+        <label for="exc-nota">Nota de resolución <span style="color:var(--color-danger)">*</span></label>
+        <textarea id="exc-nota" placeholder="Describí el motivo de la decisión tomada…"></textarea>
+      </div>
+      <div id="exc-error" class="modal-error hidden"></div>
     </div>
-
     <div class="modal-footer">
-      <button class="btn-aprobar" id="btn-aprobar">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <button class="btn-approve" id="btn-exc-aprobar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <polyline points="20 6 9 17 4 12"/>
         </svg>
         Aprobar
       </button>
-      <button class="btn-rechazar" id="btn-rechazar">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <button class="btn-reject" id="btn-exc-rechazar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
         Rechazar
       </button>
     </div>
+  </div>
+</div>
 
+<!-- Modal: Empleado (crear / editar) -->
+<div class="modal-overlay hidden" id="modal-empleado">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="emp-modal-titulo">Empleado</h3>
+      <button class="btn-close" onclick="closeModal('modal-empleado')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <form id="form-empleado" novalidate>
+      <input type="hidden" id="emp-id" />
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="emp-nombreCompleto">Nombre completo <span style="color:var(--color-danger)">*</span></label>
+          <input type="text" id="emp-nombreCompleto" placeholder="Juan Pérez" />
+        </div>
+        <div class="form-group">
+          <label for="emp-correo">Correo electrónico <span style="color:var(--color-danger)">*</span></label>
+          <input type="email" id="emp-correo" placeholder="juan@epesa.com.py" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="emp-documentoIdentidad">Documento de identidad <span style="color:var(--color-danger)">*</span></label>
+            <input type="text" id="emp-documentoIdentidad" placeholder="1234567" />
+          </div>
+          <div class="form-group">
+            <label for="emp-rol">Rol <span style="color:var(--color-danger)">*</span></label>
+            <!-- Poblado por JS con ROL_OPTIONS -->
+            <select id="emp-rol"></select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="emp-tipoContrato">Tipo de contrato <span style="color:var(--color-danger)">*</span></label>
+          <!-- Poblado por JS con CONTRATO_OPTIONS -->
+          <select id="emp-tipoContrato"></select>
+        </div>
+        <div class="form-check">
+          <input type="checkbox" id="emp-activo" checked />
+          <label for="emp-activo">Empleado activo</label>
+        </div>
+        <div id="emp-password-group" class="form-group">
+          <label for="emp-password">Contraseña <span style="color:var(--color-danger)">*</span></label>
+          <input type="password" id="emp-password" placeholder="••••••••" />
+        </div>
+        <div id="emp-error" class="modal-error hidden"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" onclick="closeModal('modal-empleado')">Cancelar</button>
+        <button type="submit" class="btn-save"   id="btn-emp-guardar">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Obra (crear / editar) -->
+<div class="modal-overlay hidden" id="modal-obra">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="obra-modal-titulo">Obra</h3>
+      <button class="btn-close" onclick="closeModal('modal-obra')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <form id="form-obra" novalidate>
+      <input type="hidden" id="obra-id" />
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="obra-nombre">Nombre <span style="color:var(--color-danger)">*</span></label>
+          <input type="text" id="obra-nombre" placeholder="Edificio Central" />
+        </div>
+        <div class="form-group">
+          <label for="obra-ubicacion">Ubicación</label>
+          <input type="text" id="obra-ubicacion" placeholder="Av. Mariscal López 1234, Asunción" />
+        </div>
+        <div class="form-group">
+          <label for="obra-descripcion">Descripción</label>
+          <textarea id="obra-descripcion" placeholder="Descripción breve del proyecto…"></textarea>
+        </div>
+        <div class="form-check">
+          <input type="checkbox" id="obra-activa" checked />
+          <label for="obra-activa">Obra activa</label>
+        </div>
+        <div id="obra-error" class="modal-error hidden"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" onclick="closeModal('modal-obra')">Cancelar</button>
+        <button type="submit" class="btn-save"   id="btn-obra-guardar">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Asignación -->
+<div class="modal-overlay hidden" id="modal-asignacion">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Nueva Asignación</h3>
+      <button class="btn-close" onclick="closeModal('modal-asignacion')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <form id="form-asignacion" novalidate>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="asig-empleado">Empleado <span style="color:var(--color-danger)">*</span></label>
+          <select id="asig-empleado"><option value="">Seleccioná un empleado</option></select>
+        </div>
+        <div class="form-group">
+          <label for="asig-obra">Obra <span style="color:var(--color-danger)">*</span></label>
+          <select id="asig-obra"><option value="">Seleccioná una obra</option></select>
+        </div>
+        <div id="asig-error" class="modal-error hidden"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" onclick="closeModal('modal-asignacion')">Cancelar</button>
+        <button type="submit" class="btn-save"   id="btn-asig-guardar">Asignar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Confirmación eliminar -->
+<div class="modal-overlay hidden" id="modal-confirm">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <h3>Confirmar acción</h3>
+      <button class="btn-close" onclick="closeModal('modal-confirm')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p id="confirm-body" style="font-size:.88rem;color:var(--color-text-2);line-height:1.65"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel"       onclick="closeModal('modal-confirm')">Cancelar</button>
+      <button class="btn-danger-fill"  id="btn-confirm-ok">Confirmar</button>
+    </div>
   </div>
 </div>
 
 <!-- Toast container -->
 <div id="toast-container"></div>
 
+<!-- Auth (solo para logout) -->
 <script src="../js/auth.js"></script>
+<!-- Dashboard router (último, usa todo lo anterior) -->
 <script src="../js/dashboard.js"></script>
+
 </body>
 </html>
