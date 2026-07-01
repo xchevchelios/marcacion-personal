@@ -1,0 +1,7 @@
+backend/demo/target/
+*.log
+.env
+.idea/
+.vscode/*.log
+__pycache__/
+*.pyc

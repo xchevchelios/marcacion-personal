@@ -32,7 +32,7 @@ public class AdminDashboardService {
         if (administrador.getRol() == Rol.RRHH) {
             asistencias = asistenciaRepository.findAll();
         } else {
-            List<UUID> misObras = obtenerObrasDelAdministrador(administrador.getId());
+            List<String> misObras = obtenerObrasDelAdministrador(administrador.getId());
             asistencias = asistenciaRepository.findByObraIdIn(misObras);
         }
         return asistencias.stream().map(this::convertirADTO).collect(Collectors.toList());
@@ -43,7 +43,7 @@ public class AdminDashboardService {
         if (administrador.getRol() == Rol.RRHH) {
             excepciones = asistenciaRepository.findByRequiereRevision(true);
         } else {
-            List<UUID> misObras = obtenerObrasDelAdministrador(administrador.getId());
+            List<String> misObras = obtenerObrasDelAdministrador(administrador.getId());
             excepciones = asistenciaRepository.findByRequiereRevisionAndObraIdIn(true, misObras);
         }
         return excepciones.stream().map(this::convertirADTO).collect(Collectors.toList());
@@ -64,7 +64,7 @@ public class AdminDashboardService {
     }
 
     @SuppressWarnings("null")
-    private List<UUID> obtenerObrasDelAdministrador(UUID empleadoId) {
+    private List<String> obtenerObrasDelAdministrador(UUID empleadoId) {
         return asignacionRepository.findByEmpleadoId(empleadoId).stream()
                 .map(AsignacionObra::getObraId)
                 .collect(Collectors.toList());
@@ -78,12 +78,17 @@ public class AdminDashboardService {
         return AsistenciaResponseDTO.builder()
                 .id(asistencia.getId())
                 .eventId(asistencia.getEventId())
+                .empleadoId(asistencia.getEmpleadoId())
                 .empleadoNombre(empleado != null ? empleado.getNombreCompleto() : "Desconocido")
                 .empleadoDocumento(empleado != null ? empleado.getDocumentoIdentidad() : "N/A")
                 .empleadoTipoContrato(empleado != null ? empleado.getTipoContrato().name() : "N/A")
+                .obraId(asistencia.getObraId())
                 .obraNombre(obra != null ? obra.getNombre() : "Obra Desconocida")
                 .deviceId(asistencia.getDeviceId())
                 .fechaHoraReal(asistencia.getFechaHoraReal())
+                .tipoMarcacion(asistencia.getTipoMarcacion())
+                .horaEntrada("ENTRADA".equals(asistencia.getTipoMarcacion()) ? asistencia.getFechaHoraReal() : null)
+                .horaSalida("SALIDA".equals(asistencia.getTipoMarcacion()) ? asistencia.getFechaHoraReal() : null)
                 .requiereRevision(asistencia.isRequiereRevision())
                 .motivoRevision(asistencia.getMotivoRevision())
                 .build();

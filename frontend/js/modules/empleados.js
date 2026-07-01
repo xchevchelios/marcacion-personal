@@ -3,20 +3,23 @@
 // ============================================================
 
 let empListCache = [];
+let empAsignacionesCache = [];
+let empAsistenciasCache = [];
+let empleadoSeleccionadoId = null;
 
 async function cargarEmpleados() {
   if (isLoading('empleados')) return;
   setLoadingKey('empleados', true);
 
   const tbody = document.getElementById('tbody-empleados');
-  tbody.innerHTML = loadingRows(5);
+  tbody.innerHTML = loadingRows(6);
 
   try {
     const res = await apiFetch('/admin/empleados');
     if (!res) return;
 
     if (!res.ok) {
-      tbody.innerHTML = errorRow(5, 'cargarEmpleados()');
+      tbody.innerHTML = errorRow(6, 'cargarEmpleados()');
       return;
     }
 
@@ -25,7 +28,7 @@ async function cargarEmpleados() {
     tbody.innerHTML = '';
 
     if (!empListCache.length) {
-      tbody.innerHTML = emptyRow(5, 'Sin empleados registrados.');
+      tbody.innerHTML = emptyRow(6, 'Sin empleados registrados.');
       return;
     }
 
@@ -33,6 +36,8 @@ async function cargarEmpleados() {
       const tr = document.createElement('tr');
       tr.className = 'fade-in';
       tr.style.animationDelay = `${i * 25}ms`;
+      tr.title = 'Click para ver la ficha del empleado';
+      tr.addEventListener('click', () => mostrarDetalleEmpleado(emp.id));
 
       tr.innerHTML = `
         <td>
@@ -43,15 +48,20 @@ async function cargarEmpleados() {
         </td>
         <td>${escStr(emp.documentoIdentidad) || '—'}</td>
         <td>${badge(emp.rol, 'blue')}</td>
+        <td>${badge(emp.estadoAprobacion || 'PENDIENTE', emp.estadoAprobacion === 'APROBADO' ? 'green' : 'yellow')}</td>
         <td>${activeBadge(emp.activo)}</td>
         <td class="td-actions rrhh-only">
-          <button class="btn-icon" title="Editar" data-admin-action onclick="abrirModalEditarEmpleado('${escStr(emp.id)}')">
+          ${emp.rol === 'OPERATIVO' && emp.estadoAprobacion === 'PENDIENTE' ? `
+            <button class="btn-action" data-admin-action onclick="event.stopPropagation(); resolverAprobacionEmpleado('${escStr(emp.id)}', true)">Aprobar</button>
+            <button class="btn-icon danger" data-admin-action onclick="event.stopPropagation(); resolverAprobacionEmpleado('${escStr(emp.id)}', false)" title="Rechazar">×</button>
+          ` : ''}
+          <button class="btn-icon" title="Editar" data-admin-action onclick="event.stopPropagation(); abrirModalEditarEmpleado('${escStr(emp.id)}')">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
             </svg>
           </button>
-          <button class="btn-icon danger" title="Eliminar" data-admin-action onclick="confirmarEliminar('empleado','${escStr(emp.id)}','${escStr(emp.nombreCompleto)}')">
+          <button class="btn-icon danger" title="Eliminar" data-admin-action onclick="event.stopPropagation(); confirmarEliminar('empleado','${escStr(emp.id)}','${escStr(emp.nombreCompleto)}')">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="3 6 5 6 21 6"/>
               <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
@@ -63,7 +73,7 @@ async function cargarEmpleados() {
     });
 
   } catch {
-    tbody.innerHTML = errorRow(5, 'cargarEmpleados()');
+    tbody.innerHTML = errorRow(6, 'cargarEmpleados()');
   } finally {
     setLoadingKey('empleados', false);
     applyRBAC(); // re-aplicar tras renderizar
@@ -71,6 +81,117 @@ async function cargarEmpleados() {
 }
 
 // ── Modal Empleado ─────────────────────────────────────────
+
+async function mostrarDetalleEmpleado(id) {
+  const emp = empListCache.find(e => String(e.id) === String(id));
+  if (!emp) return;
+
+  empleadoSeleccionadoId = String(id);
+  const panel = document.getElementById('empleado-detalle-panel');
+  document.getElementById('empleado-marcaciones-panel')?.classList.add('hidden');
+  document.getElementById('tbody-empleado-marcaciones').innerHTML = '';
+  document.getElementById('empleado-detalle-nombre').textContent = emp.nombreCompleto || 'Empleado sin nombre';
+  document.getElementById('empleado-detalle-subtitulo').textContent =
+    `${emp.activo ? 'Activo' : 'Inactivo'} · aprobación móvil: ${emp.estadoAprobacion || 'PENDIENTE'}`;
+  document.getElementById('empleado-detalle-documento').textContent = emp.documentoIdentidad || '—';
+  document.getElementById('empleado-detalle-correo').textContent = emp.correo || '—';
+  document.getElementById('empleado-detalle-rol').textContent = emp.rol || '—';
+  document.getElementById('empleado-detalle-contrato').textContent = emp.tipoContrato || '—';
+
+  const tbody = document.getElementById('tbody-empleado-obras');
+  tbody.innerHTML = loadingRows(5);
+  panel.classList.remove('hidden');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  const asignaciones = await _obtenerAsignacionesEmpleado();
+  const obras = asignaciones.filter(a => String(a.empleadoId) === String(id));
+
+  if (!obras.length) {
+    tbody.innerHTML = emptyRow(5, 'Este empleado todavía no tiene obras asignadas.');
+    return;
+  }
+
+  tbody.innerHTML = obras.map(a => `
+    <tr>
+      <td class="fw-medium">${escStr(a.obraId) || '—'}</td>
+      <td>${escStr(a.obraNombre) || '—'}</td>
+      <td>${fmtDate(a.fechaInicio)}</td>
+      <td>${escStr(a.horaEntrada) || '08:00'}</td>
+      <td>${escStr(a.horaSalida) || '17:00'}</td>
+    </tr>
+  `).join('');
+}
+
+function cerrarDetalleEmpleado() {
+  document.getElementById('empleado-detalle-panel')?.classList.add('hidden');
+  document.getElementById('empleado-marcaciones-panel')?.classList.add('hidden');
+  empleadoSeleccionadoId = null;
+}
+
+async function abrirFichaMarcacionesEmpleado() {
+  if (!empleadoSeleccionadoId) return;
+
+  const panel = document.getElementById('empleado-marcaciones-panel');
+  const tbody = document.getElementById('tbody-empleado-marcaciones');
+  tbody.innerHTML = loadingRows(6);
+  panel.classList.remove('hidden');
+
+  const asistencias = await _obtenerAsistenciasEmpleado();
+  const desde = new Date();
+  desde.setDate(desde.getDate() - 30);
+
+  const lista = asistencias
+    .filter(a => String(a.empleadoId) === String(empleadoSeleccionadoId))
+    .filter(a => a.fechaHoraReal && new Date(a.fechaHoraReal) >= desde)
+    .sort((a, b) => new Date(b.fechaHoraReal) - new Date(a.fechaHoraReal));
+
+  if (!lista.length) {
+    tbody.innerHTML = emptyRow(6, 'Sin marcaciones registradas en los últimos 30 días.');
+    return;
+  }
+
+  tbody.innerHTML = lista.map(a => `
+    <tr>
+      <td>${fmtDateTime(a.fechaHoraReal)}</td>
+      <td>${badge(a.tipoMarcacion || 'ENTRADA', a.tipoMarcacion === 'SALIDA' ? 'blue' : 'green')}</td>
+      <td><span class="fw-medium">${escStr(a.obraId) || '—'}</span> - ${escStr(a.obraNombre) || '—'}</td>
+      <td>${a.requiereRevision ? badge('Revisión', 'yellow') : badge('Conforme', 'green')}</td>
+      <td class="td-truncate" title="${escStr(a.motivoRevision)}">${escStr(a.motivoRevision) || '—'}</td>
+      <td class="td-truncate" title="${escStr(a.deviceId)}">${escStr(a.deviceId) || '—'}</td>
+    </tr>
+  `).join('');
+}
+
+async function _obtenerAsignacionesEmpleado() {
+  if (empAsignacionesCache.length) return empAsignacionesCache;
+  try {
+    const res = await apiFetch('/admin/asignaciones');
+    if (!res?.ok) return [];
+    const data = await res.json();
+    empAsignacionesCache = Array.isArray(data) ? data : (data.content ?? []);
+    return empAsignacionesCache;
+  } catch {
+    return [];
+  }
+}
+
+async function _obtenerAsistenciasEmpleado() {
+  try {
+    const res = await apiFetch('/admin/dashboard/asistencias');
+    if (!res?.ok) return [];
+    const data = await res.json();
+    empAsistenciasCache = Array.isArray(data) ? data : (data.content ?? []);
+    return empAsistenciasCache;
+  } catch {
+    return [];
+  }
+}
+
+function invalidarCacheDetalleEmpleados() {
+  empAsignacionesCache = [];
+  empAsistenciasCache = [];
+  cerrarDetalleEmpleado();
+}
 
 function abrirModalNuevoEmpleado() {
   _resetFormEmpleado();
@@ -152,6 +273,7 @@ function configurarModalEmpleado() {
       if (res?.ok) {
         closeModal('modal-empleado');
         toast(id ? '✓ Empleado actualizado' : '✓ Empleado creado');
+        empAsignacionesCache = [];
         await cargarEmpleados();
       } else {
         const data = await res?.json().catch(() => ({}));
@@ -168,4 +290,15 @@ function configurarModalEmpleado() {
 function showFormError(el, msg) {
   el.textContent = msg;
   el.classList.remove('hidden');
+}
+
+async function resolverAprobacionEmpleado(id, aprobar) {
+  const res = await apiFetch(`/admin/empleados/${id}/aprobacion?aprobar=${aprobar}`, { method: 'PATCH' });
+  if (res?.ok) {
+    toast(aprobar ? 'Acceso móvil aprobado' : 'Acceso móvil rechazado', aprobar ? 'success' : 'warning');
+    empAsignacionesCache = [];
+    await cargarEmpleados();
+  } else {
+    toast('No se pudo actualizar la aprobación', 'error');
+  }
 }

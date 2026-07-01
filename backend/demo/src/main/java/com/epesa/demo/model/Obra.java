@@ -3,7 +3,6 @@ package com.epesa.demo.model;
 import jakarta.persistence.*;
 import lombok.*;
 import org.locationtech.jts.geom.Polygon;
-import java.util.UUID;
 
 @Entity
 @Table(name = "obras")
@@ -14,8 +13,8 @@ import java.util.UUID;
 @Builder
 public class Obra {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @Column(name = "codigo_sap", nullable = false, length = 100)
+    private String codigoSap;
 
     @Column(nullable = false)
     private String nombre;

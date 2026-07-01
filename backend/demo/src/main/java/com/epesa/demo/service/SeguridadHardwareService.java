@@ -5,46 +5,31 @@ import com.epesa.demo.model.Dispositivo;
 import com.epesa.demo.repository.DispositivoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class SeguridadHardwareService {
-
     private final DispositivoRepository dispositivoRepository;
 
-    // Usado por el Admin web para registrar nuevos teléfonos/tablets
+    /** Registra un dispositivo nuevo o actualiza y reactiva uno ya enrolado. */
+    @Transactional
     public Dispositivo enrolarDispositivo(RegistroDispositivoDto dto) {
-        if (dispositivoRepository.findByDeviceId(dto.getDeviceId()).isPresent()) {
-            throw new RuntimeException("El dispositivo ya está registrado");
-        }
-
-        Dispositivo nuevo = Dispositivo.builder()
-                .deviceId(dto.getDeviceId())
-                .firmaHardware(dto.getFirmaHardware()) // En un entorno real, esto se hashea o usa PKI
-                .activo(true)
-                .descripcion(dto.getDescripcion())
-                .build();
-
-        return dispositivoRepository.save(nuevo);
+        Dispositivo dispositivo = dispositivoRepository.findByDeviceId(dto.getDeviceId())
+                .orElseGet(() -> Dispositivo.builder()
+                        .deviceId(dto.getDeviceId())
+                        .build());
+        dispositivo.setFirmaHardware(dto.getFirmaHardware());
+        dispositivo.setDescripcion(dto.getDescripcion());
+        dispositivo.setActivo(true);
+        return dispositivoRepository.save(dispositivo);
     }
 
-    // Usado por el Procesador Asíncrono para validar la procedencia de la marcación
+    @Transactional(readOnly = true)
     public boolean validarFirmaZeroTrust(String deviceId, String firmaEnviada) {
-        Optional<Dispositivo> dispositivoOpt = dispositivoRepository.findByDeviceId(deviceId);
-
-        if (dispositivoOpt.isEmpty()) {
-            return false; // Hardware desconocido = Bloqueo inmediato
-        }
-
-        Dispositivo dispositivo = dispositivoOpt.get();
-        
-        if (!dispositivo.isActivo()) {
-            return false; // Hardware dado de baja o robado
-        }
-
-        // Validación estricta
-        return dispositivo.getFirmaHardware().equals(firmaEnviada);
+        return dispositivoRepository.findByDeviceId(deviceId)
+                .filter(Dispositivo::isActivo)
+                .map(dispositivo -> dispositivo.getFirmaHardware().equals(firmaEnviada))
+                .orElse(false);
     }
 }

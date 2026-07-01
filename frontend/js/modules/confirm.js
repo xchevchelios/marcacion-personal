@@ -44,6 +44,12 @@ function configurarModalConfirm() {
       if (res && (res.ok || res.status === 204)) {
         closeModal('modal-confirm');
         toast('✓ Eliminado correctamente', 'warning');
+        if (tipo === 'empleado' || tipo === 'asignacion') {
+          invalidarCacheDetalleEmpleados?.();
+        }
+        if (tipo === 'obra' || tipo === 'asignacion') {
+          invalidarCacheDetalleObras?.();
+        }
         await recargar[tipo]?.();
       } else {
         toast('Error al eliminar. Intentá de nuevo.', 'error');

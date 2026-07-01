@@ -13,14 +13,20 @@ public class AsistenciaResponseDTO {
     private UUID eventId;
     
     // Datos resueltos para la vista web
+    private UUID empleadoId;
     private String empleadoNombre;
     private String empleadoDocumento;
     private String empleadoTipoContrato;
+    private String obraId;
     private String obraNombre;
     
     // Datos técnicos
     private String deviceId;
     private LocalDateTime fechaHoraReal;
+    private String tipoMarcacion;
+    private LocalDateTime horaEntrada;
+    private LocalDateTime horaSalida;
+    private Double horasTrabajadas;
     
     // Flags de negocio
     private boolean requiereRevision;

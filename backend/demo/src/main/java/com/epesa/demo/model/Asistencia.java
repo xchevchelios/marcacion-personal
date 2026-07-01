@@ -24,7 +24,7 @@ public class Asistencia {
     private String deviceId;
 
     @Column(nullable = false)
-    private UUID obraId;
+    private String obraId;
 
     @Column(nullable = false)
     private LocalDateTime fechaHoraReal;
@@ -40,6 +40,10 @@ public class Asistencia {
 
     @Column(nullable = false)
     private UUID empleadoId;
+
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private String tipoMarcacion = "ENTRADA";
 
     @Column(nullable = false)
     private boolean requiereRevision; // Flag de Soft Fail

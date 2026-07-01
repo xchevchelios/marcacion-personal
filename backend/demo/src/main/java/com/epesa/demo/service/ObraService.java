@@ -1,109 +1,94 @@
 package com.epesa.demo.service;
 
+import com.epesa.demo.dto.ObraDetailDto;
 import com.epesa.demo.dto.ObraRequestDto;
 import com.epesa.demo.dto.ObraResponseDto;
-import com.epesa.demo.dto.ObraDetailDto;
 import com.epesa.demo.dto.ValidacionEspacialResult;
 import com.epesa.demo.model.Obra;
 import com.epesa.demo.repository.ObraRepository;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Polygon;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ObraService {
-
     private final ObraRepository obraRepository;
     private final GeocercaService geocercaService;
 
+    @Transactional
     public ObraResponseDto crearObra(ObraRequestDto request) {
-        Polygon poligono = geocercaService.crearPoligono(request.getVertices());
-        
-        Obra nuevaObra = Obra.builder()
+        String codigoSap = normalizarCodigo(request.getCodigoSap());
+        if (obraRepository.existsById(codigoSap)) {
+            throw new IllegalArgumentException("Ya existe una obra con el código SAP " + codigoSap);
+        }
+        Obra obra = Obra.builder()
+                .codigoSap(codigoSap)
                 .nombre(request.getNombre())
                 .ubicacion(request.getUbicacion())
                 .descripcion(request.getDescripcion())
-                .activa(request.getActiva() != null ? request.getActiva() : true)
-                .areaGeocerca(poligono)
+                .activa(request.getActiva() == null || request.getActiva())
+                .areaGeocerca(geocercaService.crearPoligono(request.getVertices()))
                 .build();
-                
-        nuevaObra = obraRepository.save(nuevaObra);
-        
-        return new ObraResponseDto(
-                nuevaObra.getId(),
-                nuevaObra.getNombre(),
-                nuevaObra.getUbicacion(),
-                nuevaObra.getDescripcion(),
-                nuevaObra.getActiva()
-        );
+        return convertir(obraRepository.save(obra));
     }
 
+    @Transactional(readOnly = true)
     public List<ObraResponseDto> listarObras() {
-        return obraRepository.findAll().stream()
-                .map(obra -> new ObraResponseDto(
-                        obra.getId(),
-                        obra.getNombre(),
-                        obra.getUbicacion(),
-                        obra.getDescripcion(),
-                        obra.getActiva()
-                ))
-                .collect(Collectors.toList());
+        return obraRepository.findAll().stream().map(this::convertir).toList();
     }
 
-    public ObraDetailDto obtenerObraDetalle(UUID id) {
-        Obra obra = obraRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Obra no encontrada"));
-
-        return new ObraDetailDto(
-                obra.getId(),
-                obra.getNombre(),
-                obra.getUbicacion(),
-                obra.getDescripcion(),
-                obra.getActiva(),
-                geocercaService.extraerVertices(obra.getAreaGeocerca())
-        );
+    @Transactional(readOnly = true)
+    public ObraDetailDto obtenerObraDetalle(String codigoSap) {
+        Obra obra = buscar(codigoSap);
+        return new ObraDetailDto(obra.getCodigoSap(), obra.getNombre(), obra.getUbicacion(),
+                obra.getDescripcion(), obra.getActiva(),
+                geocercaService.extraerVertices(obra.getAreaGeocerca()));
     }
 
-    public ObraResponseDto actualizarObra(UUID id, ObraRequestDto request) {
-        Obra obra = obraRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Obra no encontrada"));
-
+    @Transactional
+    public ObraResponseDto actualizarObra(String codigoSap, ObraRequestDto request) {
+        Obra obra = buscar(codigoSap);
+        String codigoSolicitado = normalizarCodigo(request.getCodigoSap());
+        if (!obra.getCodigoSap().equals(codigoSolicitado)) {
+            throw new IllegalArgumentException("El código SAP no se puede modificar");
+        }
         Polygon poligono = geocercaService.crearPoligono(request.getVertices());
         obra.setNombre(request.getNombre());
         obra.setUbicacion(request.getUbicacion());
         obra.setDescripcion(request.getDescripcion());
-        obra.setActiva(request.getActiva() != null ? request.getActiva() : true);
+        obra.setActiva(request.getActiva() == null || request.getActiva());
         obra.setAreaGeocerca(poligono);
-
-        obra = obraRepository.save(obra);
-        return new ObraResponseDto(
-                obra.getId(),
-                obra.getNombre(),
-                obra.getUbicacion(),
-                obra.getDescripcion(),
-                obra.getActiva()
-        );
+        return convertir(obraRepository.save(obra));
     }
 
-    public void eliminarObra(UUID id) {
-        obraRepository.deleteById(id);
+    @Transactional
+    public void eliminarObra(String codigoSap) {
+        obraRepository.deleteById(normalizarCodigo(codigoSap));
     }
 
-    public ValidacionEspacialResult validarUbicacion(UUID obraId, Double lat, Double lng) {
-        Obra obra = obraRepository.findById(obraId)
-                .orElseThrow(() -> new RuntimeException("Obra no encontrada"));
-        
+    @Transactional(readOnly = true)
+    public ValidacionEspacialResult validarUbicacion(String codigoSap, Double lat, Double lng) {
+        Obra obra = buscar(codigoSap);
         boolean dentro = geocercaService.puntoDentroDePoligono(lat, lng, obra.getAreaGeocerca());
-        return new ValidacionEspacialResult(dentro, dentro ? "Punto dentro de la geocerca" : "Punto fuera del área permitida");
+        return new ValidacionEspacialResult(dentro,
+                dentro ? "Punto dentro de la geocerca" : "Punto fuera del área permitida");
     }
 
-    public boolean verificarAsignacionActiva(UUID empleadoId, UUID obraId, LocalDateTime timestampDispositivo) {
-        return false;
+    private Obra buscar(String codigoSap) {
+        return obraRepository.findById(normalizarCodigo(codigoSap))
+                .orElseThrow(() -> new IllegalArgumentException("Obra no encontrada: " + codigoSap));
+    }
+
+    private String normalizarCodigo(String codigoSap) {
+        return codigoSap.trim().toUpperCase(java.util.Locale.ROOT);
+    }
+
+    private ObraResponseDto convertir(Obra obra) {
+        return new ObraResponseDto(obra.getCodigoSap(), obra.getNombre(), obra.getUbicacion(),
+                obra.getDescripcion(), obra.getActiva());
     }
 }

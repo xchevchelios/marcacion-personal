@@ -30,4 +30,10 @@ public class AdminEmpleadoController {
     public ResponseEntity<Empleado> obtenerEmpleado(@PathVariable UUID id) {
         return ResponseEntity.ok(empleadoService.obtenerPorId(id));
     }
+
+    @PatchMapping("/{id}/aprobacion")
+    public ResponseEntity<Empleado> resolverAprobacion(@PathVariable UUID id,
+                                                        @RequestParam boolean aprobar) {
+        return ResponseEntity.ok(empleadoService.resolverAprobacion(id, aprobar));
+    }
 }

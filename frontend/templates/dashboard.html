@@ -178,6 +178,7 @@
                   <th>Empleado</th>
                   <th>Obra</th>
                   <th>Fecha y Hora</th>
+                  <th>Tipo</th>
                   <th>Motivo</th>
                   <th>Estado</th>
                   <th>Acción</th>
@@ -284,12 +285,81 @@
                   <th>Nombre Completo</th>
                   <th>Documento</th>
                   <th>Rol</th>
+                  <th>Aprobación móvil</th>
                   <th>Estado</th>
                   <th class="rrhh-only">Acciones</th>
                 </tr>
               </thead>
               <tbody id="tbody-empleados"></tbody>
             </table>
+          </div>
+        </div>
+        <div class="detail-panel hidden" id="empleado-detalle-panel">
+          <div class="detail-header">
+            <div>
+              <span class="detail-kicker">Ficha de empleado</span>
+              <h3 id="empleado-detalle-nombre">—</h3>
+              <p id="empleado-detalle-subtitulo">Seleccioná un empleado para ver sus datos.</p>
+            </div>
+            <div class="panel-actions">
+              <button class="btn-sm btn-sm-green" id="btn-empleado-marcaciones" onclick="abrirFichaMarcacionesEmpleado()">
+                Ver marcaciones
+              </button>
+              <button class="btn-sm btn-sm-outline" onclick="cerrarDetalleEmpleado()">Cerrar</button>
+            </div>
+          </div>
+          <div class="detail-grid">
+            <div class="detail-card">
+              <span>Documento</span>
+              <strong id="empleado-detalle-documento">—</strong>
+            </div>
+            <div class="detail-card">
+              <span>Correo</span>
+              <strong id="empleado-detalle-correo">—</strong>
+            </div>
+            <div class="detail-card">
+              <span>Rol</span>
+              <strong id="empleado-detalle-rol">—</strong>
+            </div>
+            <div class="detail-card">
+              <span>Contrato</span>
+              <strong id="empleado-detalle-contrato">—</strong>
+            </div>
+          </div>
+          <div class="detail-section">
+            <h4>Obras asignadas</h4>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Código SAP</th>
+                    <th>Obra</th>
+                    <th>Desde</th>
+                    <th>Hora entrada</th>
+                    <th>Hora salida</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-empleado-obras"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="detail-section hidden" id="empleado-marcaciones-panel">
+            <h4>Marcaciones realizadas en los últimos 30 días</h4>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Fecha y hora</th>
+                    <th>Tipo</th>
+                    <th>Obra</th>
+                    <th>Estado</th>
+                    <th>Motivo</th>
+                    <th>Dispositivo</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-empleado-marcaciones"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -323,6 +393,7 @@
             <table>
               <thead>
                 <tr>
+                  <th>Código SAP</th>
                   <th>Nombre</th>
                   <th>Ubicación</th>
                   <th>Descripción</th>
@@ -332,6 +403,51 @@
               </thead>
               <tbody id="tbody-obras"></tbody>
             </table>
+          </div>
+        </div>
+        <div class="detail-panel hidden" id="obra-detalle-panel">
+          <div class="detail-header">
+            <div>
+              <span class="detail-kicker">Ficha de obra</span>
+              <h3 id="obra-detalle-nombre">—</h3>
+              <p id="obra-detalle-subtitulo">Seleccioná una obra para ver sus datos.</p>
+            </div>
+            <button class="btn-sm btn-sm-outline" onclick="cerrarDetalleObra()">Cerrar</button>
+          </div>
+          <div class="detail-grid">
+            <div class="detail-card">
+              <span>Código SAP</span>
+              <strong id="obra-detalle-codigo">—</strong>
+            </div>
+            <div class="detail-card">
+              <span>Ubicación</span>
+              <strong id="obra-detalle-ubicacion">—</strong>
+            </div>
+            <div class="detail-card">
+              <span>Estado</span>
+              <strong id="obra-detalle-estado">—</strong>
+            </div>
+            <div class="detail-card">
+              <span>Descripción</span>
+              <strong id="obra-detalle-descripcion">—</strong>
+            </div>
+          </div>
+          <div class="detail-section">
+            <h4>Empleados asignados</h4>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Empleado</th>
+                    <th>Código SAP</th>
+                    <th>Desde</th>
+                    <th>Hora entrada</th>
+                    <th>Hora salida</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-obra-empleados"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -368,6 +484,8 @@
                   <th>Empleado</th>
                   <th>Obra</th>
                   <th>Fecha Asignación</th>
+                  <th>Hora de entrada</th>
+                  <th>Hora de salida</th>
                   <th class="rrhh-only">Acciones</th>
                 </tr>
               </thead>
@@ -492,6 +610,10 @@
       <input type="hidden" id="obra-id" />
       <div class="modal-body">
         <div class="form-group">
+          <label for="obra-codigo-sap">Código SAP <span style="color:var(--color-danger)">*</span></label>
+          <input type="text" id="obra-codigo-sap" maxlength="100" placeholder="OBRA-2026-001" />
+        </div>
+        <div class="form-group">
           <label for="obra-nombre">Nombre <span style="color:var(--color-danger)">*</span></label>
           <input type="text" id="obra-nombre" placeholder="Edificio Central" />
         </div>
@@ -555,6 +677,14 @@
         <div class="form-group">
           <label for="asig-obra">Obra <span style="color:var(--color-danger)">*</span></label>
           <select id="asig-obra"><option value="">Seleccioná una obra</option></select>
+        </div>
+        <div class="form-group">
+          <label for="asig-hora-entrada">Hora programada de entrada</label>
+          <input type="time" id="asig-hora-entrada" value="08:00" />
+        </div>
+        <div class="form-group">
+          <label for="asig-hora-salida">Hora programada de salida</label>
+          <input type="time" id="asig-hora-salida" value="17:00" />
         </div>
         <div id="asig-error" class="modal-error hidden"></div>
       </div>

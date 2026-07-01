@@ -68,6 +68,13 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function goToDashboard() {
+  const role = localStorage.getItem('user_role');
+  const allowedRoles = ['RRHH', 'ADMIN', 'JEFE_OBRA', 'RESIDENTE'];
+  if (role && !allowedRoles.includes(role)) {
+    localStorage.clear();
+    window.location.href = 'index.html';
+    return;
+  }
   window.location.href = 'dashboard.html';
 }
 

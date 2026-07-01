@@ -3,6 +3,7 @@
 // ============================================================
 
 let obraListCache = [];
+let obraAsignacionesCache = [];
 let obraVerticesActual = []; // Para almacenar vértices del modal
 let obraMap = null; // Leaflet map instance
 let obraMapMarkers = []; // Array de marcadores en el mapa
@@ -12,14 +13,14 @@ async function cargarObras() {
   setLoadingKey('obras', true);
 
   const tbody = document.getElementById('tbody-obras');
-  tbody.innerHTML = loadingRows(5);
+  tbody.innerHTML = loadingRows(6);
 
   try {
     const res = await apiFetch('/admin/obras');
     if (!res) return;
 
     if (!res.ok) {
-      tbody.innerHTML = errorRow(5, 'cargarObras()');
+      tbody.innerHTML = errorRow(6, 'cargarObras()');
       return;
     }
 
@@ -28,7 +29,7 @@ async function cargarObras() {
     tbody.innerHTML = '';
 
     if (!obraListCache.length) {
-      tbody.innerHTML = emptyRow(5, 'Sin obras registradas.');
+      tbody.innerHTML = emptyRow(6, 'Sin obras registradas.');
       return;
     }
 
@@ -36,20 +37,23 @@ async function cargarObras() {
       const tr = document.createElement('tr');
       tr.className = 'fade-in';
       tr.style.animationDelay = `${i * 25}ms`;
+      tr.title = 'Click para ver la ficha de la obra';
+      tr.addEventListener('click', () => mostrarDetalleObra(obra.codigoSap));
 
       tr.innerHTML = `
+        <td class="fw-medium">${escStr(obra.codigoSap) || '—'}</td>
         <td class="fw-medium">${escStr(obra.nombre) || '—'}</td>
         <td>${escStr(obra.ubicacion) || '—'}</td>
         <td class="td-truncate" title="${escStr(obra.descripcion)}">${escStr(obra.descripcion) || '—'}</td>
         <td>${activeBadge(obra.activa)}</td>
         <td class="td-actions rrhh-only">
-          <button class="btn-icon" title="Editar" data-admin-action onclick="abrirModalEditarObra('${escStr(obra.id)}')">
+          <button class="btn-icon" title="Editar" data-admin-action onclick="event.stopPropagation(); abrirModalEditarObra('${escStr(obra.codigoSap)}')">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
             </svg>
           </button>
-          <button class="btn-icon danger" title="Eliminar" data-admin-action onclick="confirmarEliminar('obra','${escStr(obra.id)}','${escStr(obra.nombre)}')">
+          <button class="btn-icon danger" title="Eliminar" data-admin-action onclick="event.stopPropagation(); confirmarEliminar('obra','${escStr(obra.codigoSap)}','${escStr(obra.nombre)}')">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="3 6 5 6 21 6"/>
               <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
@@ -61,7 +65,7 @@ async function cargarObras() {
     });
 
   } catch {
-    tbody.innerHTML = errorRow(5, 'cargarObras()');
+    tbody.innerHTML = errorRow(6, 'cargarObras()');
   } finally {
     setLoadingKey('obras', false);
     applyRBAC();
@@ -69,6 +73,75 @@ async function cargarObras() {
 }
 
 // ── Modal Obra ─────────────────────────────────────────────
+
+async function mostrarDetalleObra(codigoSap) {
+  const obra = obraListCache.find(o => String(o.codigoSap) === String(codigoSap));
+  if (!obra) return;
+
+  const panel = document.getElementById('obra-detalle-panel');
+  document.getElementById('obra-detalle-nombre').textContent = obra.nombre || 'Obra sin nombre';
+  document.getElementById('obra-detalle-subtitulo').textContent = obra.codigoSap || 'Sin código SAP';
+  document.getElementById('obra-detalle-codigo').textContent = obra.codigoSap || '—';
+  document.getElementById('obra-detalle-ubicacion').textContent = obra.ubicacion || '—';
+  document.getElementById('obra-detalle-estado').textContent = obra.activa ? 'Activa' : 'Inactiva';
+  document.getElementById('obra-detalle-descripcion').textContent = obra.descripcion || '—';
+
+  const tbody = document.getElementById('tbody-obra-empleados');
+  tbody.innerHTML = loadingRows(5);
+  panel.classList.remove('hidden');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  const asignaciones = await _obtenerAsignacionesObra();
+  const empleados = asignaciones.filter(a => String(a.obraId) === String(codigoSap));
+
+  if (!empleados.length) {
+    tbody.innerHTML = emptyRow(5, 'Esta obra todavía no tiene empleados asignados.');
+    return;
+  }
+
+  tbody.innerHTML = empleados.map(a => `
+    <tr title="Click para abrir la ficha del empleado" onclick="abrirFichaEmpleadoDesdeObra('${escStr(a.empleadoId)}')">
+      <td>
+        <div class="cell-avatar">
+          <span class="avatar-chip">${initials(a.empleadoNombre)}</span>
+          <span class="fw-medium">${escStr(a.empleadoNombre) || '—'}</span>
+        </div>
+      </td>
+      <td>${escStr(a.obraId) || '—'}</td>
+      <td>${fmtDate(a.fechaInicio)}</td>
+      <td>${escStr(a.horaEntrada) || '08:00'}</td>
+      <td>${escStr(a.horaSalida) || '17:00'}</td>
+    </tr>
+  `).join('');
+}
+
+async function abrirFichaEmpleadoDesdeObra(empleadoId) {
+  if (!empleadoId) return;
+  await goToView('empleados');
+  await mostrarDetalleEmpleado(empleadoId);
+}
+
+function cerrarDetalleObra() {
+  document.getElementById('obra-detalle-panel')?.classList.add('hidden');
+}
+
+async function _obtenerAsignacionesObra() {
+  if (obraAsignacionesCache.length) return obraAsignacionesCache;
+  try {
+    const res = await apiFetch('/admin/asignaciones');
+    if (!res?.ok) return [];
+    const data = await res.json();
+    obraAsignacionesCache = Array.isArray(data) ? data : (data.content ?? []);
+    return obraAsignacionesCache;
+  } catch {
+    return [];
+  }
+}
+
+function invalidarCacheDetalleObras() {
+  obraAsignacionesCache = [];
+  cerrarDetalleObra();
+}
 
 function inicializarMapaObra() {
   // Si el mapa ya existe, limpiar
@@ -193,6 +266,7 @@ function eliminarVerticeObra(idx) {
 function abrirModalNuevaObra() {
   document.getElementById('form-obra').reset();
   document.getElementById('obra-id').value = '';
+  document.getElementById('obra-codigo-sap').disabled = false;
   document.getElementById('obra-modal-titulo').textContent = 'Nueva Obra';
   document.getElementById('obra-activa').checked = true;
   document.getElementById('obra-error').classList.add('hidden');
@@ -208,12 +282,14 @@ function abrirModalNuevaObra() {
 }
 
 function abrirModalEditarObra(id) {
-  const obra = obraListCache.find(o => String(o.id) === String(id));
+  const obra = obraListCache.find(o => String(o.codigoSap) === String(id));
   if (!obra) return;
 
   document.getElementById('form-obra').reset();
   document.getElementById('obra-modal-titulo').textContent = 'Editar Obra';
-  document.getElementById('obra-id').value = obra.id;
+  document.getElementById('obra-id').value = obra.codigoSap;
+  document.getElementById('obra-codigo-sap').value = obra.codigoSap;
+  document.getElementById('obra-codigo-sap').disabled = true;
   document.getElementById('obra-nombre').value = obra.nombre ?? '';
   document.getElementById('obra-ubicacion').value = obra.ubicacion ?? '';
   document.getElementById('obra-descripcion').value = obra.descripcion ?? '';
@@ -283,15 +359,20 @@ function configurarModalObra() {
     }
 
     const id          = document.getElementById('obra-id').value.trim();
+    const codigoSap   = document.getElementById('obra-codigo-sap').value.trim().toUpperCase();
     const nombre      = document.getElementById('obra-nombre').value.trim();
     const ubicacion   = document.getElementById('obra-ubicacion').value.trim();
     const descripcion = document.getElementById('obra-descripcion').value.trim();
     const activa      = document.getElementById('obra-activa').checked;
 
+    if (!codigoSap) return showFormError(errEl, 'El código SAP es obligatorio.');
+    if (!/^[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(codigoSap)) {
+      return showFormError(errEl, 'El código SAP solo admite letras, números y guiones simples.');
+    }
     if (!nombre) return showFormError(errEl, 'El nombre de la obra es obligatorio.');
 
     /** @type {Object} DTO exacto — vertices nunca puede ser null */
-    const body = { nombre, ubicacion, descripcion, vertices: obraVerticesActual, activa };
+    const body = { codigoSap, nombre, ubicacion, descripcion, vertices: obraVerticesActual, activa };
 
     btnOk.disabled = true;
     try {
@@ -303,6 +384,7 @@ function configurarModalObra() {
       if (res?.ok) {
         closeModal('modal-obra');
         toast(id ? '✓ Obra actualizada' : '✓ Obra creada');
+        obraAsignacionesCache = [];
         await cargarObras();
       } else {
         const data = await res?.json().catch(() => ({}));

@@ -5,11 +5,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Arrays;
 
 @Configuration
 public class CorsConfig {
+
+    @Value("${app.cors.allowed-origins}")
+    private String[] allowedOrigins;
 
     @Bean
     public CorsFilter corsFilter() {
@@ -17,7 +21,7 @@ public class CorsConfig {
         CorsConfiguration config = new CorsConfiguration();
         
         // Permite el origen de tu página web (Live Server de VS Code)
-        config.setAllowedOrigins(Arrays.asList("http://127.0.0.1:5500", "http://localhost:5500"));
+        config.setAllowedOrigins(Arrays.asList(allowedOrigins));
         
         // Permite todos los métodos necesarios para tu panel
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));

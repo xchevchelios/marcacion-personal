@@ -29,8 +29,22 @@ public class AsignacionObraService {
      */
     @Transactional
     public AsignacionObra asignarEmpleado(AsignacionObra asignacion) {
+        String codigoSap = asignacion.getObraId().trim().toUpperCase(java.util.Locale.ROOT);
+        if (!empleadoRepository.existsById(asignacion.getEmpleadoId())) {
+            throw new IllegalArgumentException("Empleado no encontrado");
+        }
+        if (!obraRepository.existsById(codigoSap)) {
+            throw new IllegalArgumentException("Obra no encontrada: " + codigoSap);
+        }
+        asignacion.setObraId(codigoSap);
         if (asignacion.getFechaInicio() == null) {
             asignacion.setFechaInicio(LocalDate.now());
+        }
+        if (asignacion.getHoraEntrada() == null) {
+            asignacion.setHoraEntrada(java.time.LocalTime.of(8, 0));
+        }
+        if (asignacion.getHoraSalida() == null) {
+            asignacion.setHoraSalida(java.time.LocalTime.of(17, 0));
         }
         return asignacionRepository.save(asignacion);
     }
@@ -59,7 +73,9 @@ public class AsignacionObraService {
                 asignacion.getObraId(),
                 empleadoNombre,
                 obraNombre,
-                asignacion.getFechaInicio()
+                asignacion.getFechaInicio(),
+                asignacion.getHoraEntrada(),
+                asignacion.getHoraSalida()
         );
     }
 
@@ -71,7 +87,7 @@ public class AsignacionObraService {
      * - Si la fecha de fin es null, la asignación sigue vigente de manera indefinida.
      * - Si tiene fecha de fin, la marcación no debe superar ese límite.
      */
-    public boolean verificarAsignacionActiva(UUID empleadoId, UUID obraId, LocalDateTime fechaMarcacion) {
+    public boolean verificarAsignacionActiva(UUID empleadoId, String obraId, LocalDateTime fechaMarcacion) {
         LocalDate fecha = fechaMarcacion.toLocalDate();
         List<AsignacionObra> asignaciones = asignacionRepository.findByEmpleadoIdAndObraId(empleadoId, obraId);
         

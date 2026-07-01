@@ -1,7 +1,7 @@
 package com.epesa.demo.controller;
 
 import com.epesa.demo.model.Asistencia;
-import com.epesa.demo.repository.AsistenciaRepository;
+import com.epesa.demo.service.AsistenciaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,10 +15,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AsistenciaController {
 
-    private final AsistenciaRepository asistenciaRepository;
+    private final AsistenciaService asistenciaService;
 
     @GetMapping
     public ResponseEntity<List<Asistencia>> obtenerAsistenciasValidadas() {
-        return ResponseEntity.ok(asistenciaRepository.findAll());
+        return ResponseEntity.ok(asistenciaService.obtenerTodas());
     }
 }

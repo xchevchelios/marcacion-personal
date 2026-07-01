@@ -7,7 +7,7 @@ async function cargarAsignaciones() {
   setLoadingKey('asignaciones', true);
 
   const tbody = document.getElementById('tbody-asignaciones');
-  tbody.innerHTML = loadingRows(4);
+  tbody.innerHTML = loadingRows(6);
 
   // Precargar empleados y obras para los selects del modal
   await Promise.all([_poblarSelectEmpleados(), _poblarSelectObras()]);
@@ -17,7 +17,7 @@ async function cargarAsignaciones() {
     if (!res) return;
 
     if (!res.ok) {
-      tbody.innerHTML = errorRow(4, 'cargarAsignaciones()');
+      tbody.innerHTML = errorRow(6, 'cargarAsignaciones()');
       return;
     }
 
@@ -26,7 +26,7 @@ async function cargarAsignaciones() {
     tbody.innerHTML = '';
 
     if (!lista.length) {
-      tbody.innerHTML = emptyRow(4, 'Sin asignaciones registradas.');
+      tbody.innerHTML = emptyRow(6, 'Sin asignaciones registradas.');
       return;
     }
 
@@ -42,8 +42,10 @@ async function cargarAsignaciones() {
             <span class="fw-medium">${escStr(a.empleadoNombre) || '—'}</span>
           </div>
         </td>
-        <td>${escStr(a.obraNombre) || '—'}</td>
-        <td>${fmtDate(a.fechaAsignacion)}</td>
+        <td><span class="fw-medium">${escStr(a.obraId)}</span> - ${escStr(a.obraNombre) || '—'}</td>
+        <td>${fmtDate(a.fechaInicio)}</td>
+        <td>${escStr(a.horaEntrada) || '08:00'}</td>
+        <td>${escStr(a.horaSalida) || '17:00'}</td>
         <td class="td-actions rrhh-only">
           <button class="btn-icon danger" title="Retirar de la obra" data-admin-action
             onclick="confirmarEliminar('asignacion','${escStr(a.id)}','${escStr(a.empleadoNombre)}')">
@@ -58,7 +60,7 @@ async function cargarAsignaciones() {
     });
 
   } catch {
-    tbody.innerHTML = errorRow(4, 'cargarAsignaciones()');
+    tbody.innerHTML = errorRow(6, 'cargarAsignaciones()');
   } finally {
     setLoadingKey('asignaciones', false);
     applyRBAC();
@@ -87,7 +89,7 @@ async function _poblarSelectObras() {
     const data = await res.json();
     const lista = Array.isArray(data) ? data : (data.content ?? []);
     sel.innerHTML = '<option value="">Seleccioná una obra</option>' +
-      lista.map(o => `<option value="${escStr(o.id)}">${escStr(o.nombre)}</option>`).join('');
+      lista.map(o => `<option value="${escStr(o.codigoSap)}">${escStr(o.codigoSap)} — ${escStr(o.nombre)}</option>`).join('');
   } catch { /* silencioso */ }
 }
 
@@ -96,6 +98,8 @@ async function _poblarSelectObras() {
 function abrirModalNuevaAsignacion() {
   document.getElementById('asig-empleado').value = '';
   document.getElementById('asig-obra').value     = '';
+  document.getElementById('asig-hora-entrada').value = '08:00';
+  document.getElementById('asig-hora-salida').value = '17:00';
   document.getElementById('asig-error').classList.add('hidden');
   openModal('modal-asignacion');
 }
@@ -107,6 +111,8 @@ function configurarModalAsignacion() {
     const btnOk     = document.getElementById('btn-asig-guardar');
     const empleadoId = document.getElementById('asig-empleado').value;
     const obraId     = document.getElementById('asig-obra').value;
+    const horaEntrada = document.getElementById('asig-hora-entrada').value || '08:00';
+    const horaSalida = document.getElementById('asig-hora-salida').value || '17:00';
 
     if (!empleadoId || !obraId) {
       errEl.textContent = 'Seleccioná un empleado y una obra.';
@@ -120,12 +126,14 @@ function configurarModalAsignacion() {
     try {
       const res = await apiFetch('/admin/asignaciones', {
         method: 'POST',
-        body:   JSON.stringify({ empleadoId, obraId }),
+        body:   JSON.stringify({ empleadoId, obraId, horaEntrada, horaSalida }),
       });
 
       if (res?.ok) {
         closeModal('modal-asignacion');
         toast('✓ Asignación creada');
+        invalidarCacheDetalleEmpleados?.();
+        invalidarCacheDetalleObras?.();
         // Resetear selects para forzar recarga en próxima apertura
         document.getElementById('asig-empleado').innerHTML = '<option value="">Seleccioná un empleado</option>';
         document.getElementById('asig-obra').innerHTML     = '<option value="">Seleccioná una obra</option>';

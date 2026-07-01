@@ -2,6 +2,7 @@ package com.epesa.demo.model;
 
 import com.epesa.demo.model.enums.Rol;
 import com.epesa.demo.model.enums.TipoContrato;
+import com.epesa.demo.model.enums.EstadoAprobacion;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,6 +13,7 @@ import java.util.UUID;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 @Table(name = "empleados")
@@ -29,6 +31,7 @@ public class Empleado implements UserDetails{
     private String correo; // Será el usuario de acceso (corporativo o personal)
 
     @Column(nullable = false)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password; // Se guardará encriptada con BCrypt
 
     @Column(nullable = false)
@@ -44,6 +47,11 @@ public class Empleado implements UserDetails{
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Rol rol;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private EstadoAprobacion estadoAprobacion = EstadoAprobacion.PENDIENTE;
 
     @Builder.Default
     @Column(nullable = false)

@@ -82,5 +82,5 @@ function goToView(vista) {
   document.getElementById('sidebar').classList.remove('open');
 
   // Cargar datos
-  VIEW_LOADERS[vista]?.();
+  return VIEW_LOADERS[vista]?.();
 }

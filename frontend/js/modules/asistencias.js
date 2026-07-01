@@ -44,7 +44,7 @@ async function _cargarObrasParaFiltro() {
     const sel = document.getElementById('filtro-obra');
     if (!sel) return;
     sel.innerHTML = '<option value="">Todas las obras</option>' +
-      _obrasParaFiltro.map(o => `<option value="${escStr(o.id)}">${escStr(o.nombre)}</option>`).join('');
+      _obrasParaFiltro.map(o => `<option value="${escStr(o.codigoSap)}">${escStr(o.codigoSap)} — ${escStr(o.nombre)}</option>`).join('');
   } catch { /* silencioso */ }
 }
 

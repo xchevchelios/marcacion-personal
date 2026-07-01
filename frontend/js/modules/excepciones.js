@@ -9,14 +9,14 @@ async function cargarExcepciones() {
   setLoadingKey('excepciones', true);
 
   const tbody = document.getElementById('tbody-excepciones');
-  tbody.innerHTML = loadingRows(6);
+  tbody.innerHTML = loadingRows(7);
 
   try {
     const res = await apiFetch('/admin/dashboard/excepciones');
     if (!res) return;
 
     if (!res.ok) {
-      tbody.innerHTML = errorRow(6, 'cargarExcepciones()');
+      tbody.innerHTML = errorRow(7, 'cargarExcepciones()');
       return;
     }
 
@@ -29,7 +29,7 @@ async function cargarExcepciones() {
     tbody.innerHTML = '';
 
     if (!lista.length) {
-      tbody.innerHTML = emptyRow(6, 'Sin excepciones pendientes. ✓');
+      tbody.innerHTML = emptyRow(7, 'Sin excepciones pendientes. ✓');
       return;
     }
 
@@ -49,6 +49,7 @@ async function cargarExcepciones() {
         </td>
         <td>${escStr(item.obraNombre) || '—'}</td>
         <td>${fmtDateTime(item.fechaHoraReal)}</td>
+        <td>${badge(_labelTipoExcepcion(item), item.tipoMarcacion === 'SALIDA' ? 'blue' : 'yellow')}</td>
         <td class="td-truncate" title="${escStr(item.motivoRevision)}">${escStr(item.motivoRevision) || '—'}</td>
         <td>${badge('Pendiente', 'yellow')}</td>
         <td>
@@ -66,7 +67,7 @@ async function cargarExcepciones() {
       tbody.appendChild(tr);
     });
   } catch {
-    tbody.innerHTML = errorRow(6, 'cargarExcepciones()');
+    tbody.innerHTML = errorRow(7, 'cargarExcepciones()');
   } finally {
     setLoadingKey('excepciones', false);
   }
@@ -78,6 +79,13 @@ function abrirModalExcepcion(id, nombre) {
   document.getElementById('exc-nota').value = '';
   document.getElementById('exc-error').classList.add('hidden');
   openModal('modal-excepcion');
+}
+
+function _labelTipoExcepcion(item) {
+  const motivo = String(item.motivoRevision || '').toLowerCase();
+  if (item.tipoMarcacion === 'SALIDA' || motivo.includes('salida')) return 'Salida tardía';
+  if (motivo.includes('llegada')) return 'Llegada tardía';
+  return item.tipoMarcacion === 'SALIDA' ? 'Salida' : 'Entrada';
 }
 
 async function resolverExcepcion(aprobar) {
