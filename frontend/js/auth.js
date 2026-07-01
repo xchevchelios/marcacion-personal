@@ -40,9 +40,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (res.ok) {
         const data = await res.json();
-        localStorage.setItem('jwt_token',  data.token);
-        localStorage.setItem('user_role',  data.rol);
-        localStorage.setItem('user_name',  data.nombre ?? correo);
+        localStorage.setItem('jwt_token', data.token);
+        localStorage.setItem('user_role', data.rol ?? data.role ?? (Array.isArray(data.roles) ? data.roles[0] : ''));
+        localStorage.setItem('user_name', data.nombreCompleto ?? data.nombre ?? data.name ?? correo);
         goToDashboard();
       } else {
         const err = await res.json().catch(() => ({}));
@@ -68,13 +68,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function goToDashboard() {
-  // index.html está en /frontend/, dashboard en /frontend/templates/
-  const base = window.location.href.replace(/\/index\.html.*$/, '');
-  window.location.href = `${base}/templates/dashboard.html`;
+  window.location.href = 'dashboard.html';
 }
 
 function logout() {
   localStorage.clear();
-  // dashboard.html está en templates/, index.html un nivel arriba
-  window.location.href = '../index.html';
+  window.location.href = 'index.html';
 }

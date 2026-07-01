@@ -22,8 +22,6 @@ const ROL_OPTIONS = [
 
 // Opciones de tipo de contrato
 const CONTRATO_OPTIONS = [
-  { value: 'PERMANENTE',  label: 'Permanente' },
-  { value: 'TEMPORAL',    label: 'Temporal' },
-  { value: 'CONTRATADO',  label: 'Contratado' },
-  { value: 'PASANTE',     label: 'Pasante' },
+  { value: 'INTERNO',      label: 'Interno' },
+  { value: 'TERCERIZADO',  label: 'Tercerizado' },
 ];

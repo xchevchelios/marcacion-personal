@@ -9,6 +9,9 @@ import java.util.List;
 @Data
 public class ObraRequestDto {
     @NotBlank private String nombre;
+    private String ubicacion;
+    private String descripcion;
+    private Boolean activa;
     
     // Un polígono requiere al menos 3 puntos
     @Valid @Size(min = 3) private List<CoordenadaDto> vertices; 

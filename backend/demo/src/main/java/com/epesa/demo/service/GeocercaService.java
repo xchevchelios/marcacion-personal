@@ -7,6 +7,7 @@ import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.Polygon;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.stereotype.Service;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -32,5 +33,21 @@ public class GeocercaService {
     public boolean puntoDentroDePoligono(Double lat, Double lng, Polygon poligono) {
         Point puntoMarcacion = geometryFactory.createPoint(new Coordinate(lng, lat));
         return poligono.contains(puntoMarcacion);
+    }
+
+    public List<CoordenadaDto> extraerVertices(Polygon poligono) {
+        List<CoordenadaDto> vertices = new ArrayList<>();
+        Coordinate[] coords = poligono.getExteriorRing().getCoordinates();
+        
+        // Excluir el último punto (que es igual al primero, cierre del polígono)
+        for (int i = 0; i < coords.length - 1; i++) {
+            // JTS devuelve (X, Y) -> (Longitud, Latitud)
+            CoordenadaDto coord = new CoordenadaDto();
+            coord.setLat(coords[i].getY());
+            coord.setLng(coords[i].getX());
+            vertices.add(coord);
+        }
+        
+        return vertices;
     }
 }

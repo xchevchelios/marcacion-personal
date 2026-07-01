@@ -1,0 +1,4 @@
+-- Add missing fields to obras table
+ALTER TABLE obras ADD COLUMN IF NOT EXISTS ubicacion VARCHAR(255);
+ALTER TABLE obras ADD COLUMN IF NOT EXISTS descripcion TEXT;
+ALTER TABLE obras ADD COLUMN IF NOT EXISTS activa BOOLEAN DEFAULT true NOT NULL;

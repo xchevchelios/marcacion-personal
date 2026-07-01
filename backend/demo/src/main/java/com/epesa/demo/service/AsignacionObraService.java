@@ -1,7 +1,10 @@
 package com.epesa.demo.service;
 
+import com.epesa.demo.dto.AsignacionResponseDto;
 import com.epesa.demo.model.AsignacionObra;
 import com.epesa.demo.repository.AsignacionObraRepository;
+import com.epesa.demo.repository.EmpleadoRepository;
+import com.epesa.demo.repository.ObraRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,12 +13,15 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class AsignacionObraService {
 
     private final AsignacionObraRepository asignacionRepository;
+    private final EmpleadoRepository empleadoRepository;
+    private final ObraRepository obraRepository;
 
     /**
      * Registra la asignación de un empleado a una obra determinada.
@@ -27,6 +33,34 @@ public class AsignacionObraService {
             asignacion.setFechaInicio(LocalDate.now());
         }
         return asignacionRepository.save(asignacion);
+    }
+
+    public List<AsignacionResponseDto> listarAsignaciones() {
+        return asignacionRepository.findAll().stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    public void eliminarAsignacion(UUID id) {
+        asignacionRepository.deleteById(id);
+    }
+
+    private AsignacionResponseDto convertToDto(AsignacionObra asignacion) {
+        String empleadoNombre = empleadoRepository.findById(asignacion.getEmpleadoId())
+                .map(e -> e.getNombreCompleto())
+                .orElse("Empleado desconocido");
+        String obraNombre = obraRepository.findById(asignacion.getObraId())
+                .map(o -> o.getNombre())
+                .orElse("Obra desconocida");
+
+        return new AsignacionResponseDto(
+                asignacion.getId(),
+                asignacion.getEmpleadoId(),
+                asignacion.getObraId(),
+                empleadoNombre,
+                obraNombre,
+                asignacion.getFechaInicio()
+        );
     }
 
     /**

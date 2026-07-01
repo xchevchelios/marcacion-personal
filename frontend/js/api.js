@@ -16,16 +16,18 @@
 async function apiFetch(endpoint, opts = {}) {
   const token = localStorage.getItem('jwt_token');
 
-  const config = {
-    ...opts,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-      ...(opts.headers ?? {}),
-    },
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(opts.headers ?? {}),
   };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...opts,
+    headers,
+  });
 
   if (response.status === 401) {
     sessionExpired();
@@ -37,12 +39,5 @@ async function apiFetch(endpoint, opts = {}) {
 
 function sessionExpired() {
   localStorage.clear();
-  // Navegar a index.html relativo a la raíz del servidor
-  const segments = window.location.pathname.split('/');
-  // Encontrar 'frontend' u otro prefijo y construir ruta correcta
-  const frontendIdx = segments.findIndex(s => s === 'frontend');
-  const base = frontendIdx >= 0
-    ? '/' + segments.slice(1, frontendIdx + 1).join('/')
-    : '';
-  window.location.href = `${base}/index.html`;
+  window.location.href = 'index.html';
 }
