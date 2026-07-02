@@ -16,5 +16,9 @@ public interface AsistenciaRepository extends JpaRepository<Asistencia, UUID> {
     List<Asistencia> findByRequiereRevisionAndObraIdIn(boolean requiereRevision, List<String> obraIds);
     boolean existsByEmpleadoIdAndObraIdAndTipoMarcacionAndFechaHoraRealBetween(
             UUID empleadoId, String obraId, String tipoMarcacion, LocalDateTime desde, LocalDateTime hasta);
+    List<Asistencia> findByEstadoRevisionNotOrderByFechaResolucionDesc(String estadoRevision);
+    long countByFechaHoraRealBetween(LocalDateTime desde, LocalDateTime hasta);
+    long countByRequiereRevisionTrue();
+    long countByRequiereRevisionTrueAndTipoMarcacionAndFechaHoraRealBetween(String tipo, LocalDateTime desde, LocalDateTime hasta);
 
 }

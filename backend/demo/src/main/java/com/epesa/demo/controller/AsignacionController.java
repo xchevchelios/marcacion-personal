@@ -1,11 +1,12 @@
 package com.epesa.demo.controller;
 
 import com.epesa.demo.dto.AsignacionResponseDto;
-import com.epesa.demo.model.AsignacionObra;
+import com.epesa.demo.dto.AsignacionRequestDto;
 import com.epesa.demo.service.AsignacionObraService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.UUID;
@@ -23,7 +24,7 @@ public class AsignacionController {
     }
 
     @PostMapping
-    public ResponseEntity<AsignacionObra> crearAsignacion(@RequestBody AsignacionObra asignacion) {
+    public ResponseEntity<AsignacionResponseDto> crearAsignacion(@Valid @RequestBody AsignacionRequestDto asignacion) {
         return ResponseEntity.ok(asignacionObraService.asignarEmpleado(asignacion));
     }
 

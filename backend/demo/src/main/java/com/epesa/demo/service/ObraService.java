@@ -18,6 +18,7 @@ import java.util.List;
 public class ObraService {
     private final ObraRepository obraRepository;
     private final GeocercaService geocercaService;
+    private final AuditService auditService;
 
     @Transactional
     public ObraResponseDto crearObra(ObraRequestDto request) {
@@ -33,7 +34,9 @@ public class ObraService {
                 .activa(request.getActiva() == null || request.getActiva())
                 .areaGeocerca(geocercaService.crearPoligono(request.getVertices()))
                 .build();
-        return convertir(obraRepository.save(obra));
+        obra = obraRepository.save(obra);
+        auditService.record("CREATE", "OBRA", obra.getCodigoSap(), obra.getNombre());
+        return convertir(obra);
     }
 
     @Transactional(readOnly = true)
@@ -62,12 +65,17 @@ public class ObraService {
         obra.setDescripcion(request.getDescripcion());
         obra.setActiva(request.getActiva() == null || request.getActiva());
         obra.setAreaGeocerca(poligono);
-        return convertir(obraRepository.save(obra));
+        obra = obraRepository.save(obra);
+        auditService.record("UPDATE", "OBRA", obra.getCodigoSap(), obra.getNombre());
+        return convertir(obra);
     }
 
     @Transactional
     public void eliminarObra(String codigoSap) {
-        obraRepository.deleteById(normalizarCodigo(codigoSap));
+        Obra obra = buscar(codigoSap);
+        obra.setActiva(false);
+        obraRepository.save(obra);
+        auditService.record("DEACTIVATE", "OBRA", obra.getCodigoSap(), obra.getNombre());
     }
 
     @Transactional(readOnly = true)

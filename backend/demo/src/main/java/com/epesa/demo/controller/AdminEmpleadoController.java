@@ -1,39 +1,21 @@
 package com.epesa.demo.controller;
 
-import com.epesa.demo.model.Empleado;
+import com.epesa.demo.dto.EmpleadoRequestDto;
+import com.epesa.demo.dto.EmpleadoResponseDto;
 import com.epesa.demo.service.EmpleadoService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.*;
 
-import java.util.List;
-import java.util.UUID;
-
-@RestController
-@RequestMapping("/api/v1/admin/empleados")
-@RequiredArgsConstructor
+@RestController @RequestMapping("/api/v1/admin/empleados") @RequiredArgsConstructor
 public class AdminEmpleadoController {
-
-    private final EmpleadoService empleadoService;
-
-    @PostMapping
-    public ResponseEntity<Empleado> crearEmpleado(@RequestBody Empleado empleado) {
-        return ResponseEntity.ok(empleadoService.registrarEmpleado(empleado));
-    }
-
-    @GetMapping
-    public ResponseEntity<List<Empleado>> listarEmpleados() {
-        return ResponseEntity.ok(empleadoService.listarTodos());
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Empleado> obtenerEmpleado(@PathVariable UUID id) {
-        return ResponseEntity.ok(empleadoService.obtenerPorId(id));
-    }
-
-    @PatchMapping("/{id}/aprobacion")
-    public ResponseEntity<Empleado> resolverAprobacion(@PathVariable UUID id,
-                                                        @RequestParam boolean aprobar) {
-        return ResponseEntity.ok(empleadoService.resolverAprobacion(id, aprobar));
-    }
+    private final EmpleadoService service;
+    @PostMapping public ResponseEntity<EmpleadoResponseDto> crear(@Valid @RequestBody EmpleadoRequestDto request) { return ResponseEntity.ok(service.crear(request)); }
+    @GetMapping public List<EmpleadoResponseDto> listar() { return service.listarTodos(); }
+    @GetMapping("/{id}") public EmpleadoResponseDto obtener(@PathVariable UUID id) { return service.obtener(id); }
+    @PutMapping("/{id}") public EmpleadoResponseDto actualizar(@PathVariable UUID id, @Valid @RequestBody EmpleadoRequestDto request) { return service.actualizar(id, request); }
+    @PatchMapping("/{id}/estado") public EmpleadoResponseDto cambiarEstado(@PathVariable UUID id, @RequestParam boolean activo) { return service.cambiarEstado(id, activo); }
+    @PatchMapping("/{id}/aprobacion") public EmpleadoResponseDto aprobar(@PathVariable UUID id, @RequestParam boolean aprobar) { return service.resolverAprobacion(id, aprobar); }
 }

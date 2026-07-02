@@ -17,13 +17,25 @@ services:
     container_name: postgres_gis
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "@lvaro1234"
+      POSTGRES_PASSWORD: admin
       POSTGRES_DB: marcacion_db
     ports:
       - "5432:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
 
+  frontend:
+    image: node:24-alpine
+    container_name: frontend_svelte
+    working_dir: /app
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend-svelte:/app
+      - yarn_cache:/usr/local/share/.cache/yarn
+    command: sh -c "corepack enable && yarn install && yarn dev --host 0.0.0.0"
+
 volumes:
   minio_data:
   pg_data:
+  yarn_cache:

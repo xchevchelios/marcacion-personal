@@ -31,4 +31,8 @@ public class AsistenciaResponseDTO {
     // Flags de negocio
     private boolean requiereRevision;
     private String motivoRevision;
+    private String estadoRevision;
+    private String notaResolucion;
+    private String resueltoPor;
+    private LocalDateTime fechaResolucion;
 }

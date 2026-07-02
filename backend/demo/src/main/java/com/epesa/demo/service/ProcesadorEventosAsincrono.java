@@ -77,6 +77,7 @@ public class ProcesadorEventosAsincrono {
                         .longitud(lng)
                         .fechaProcesamiento(java.time.LocalDateTime.now())
                         .requiereRevision(requiereRevision)
+                        .estadoRevision(requiereRevision ? "PENDIENTE" : "SIN_REVISION")
                         .motivoRevision(motivo)
                         .build());
 

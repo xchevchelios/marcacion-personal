@@ -1,6 +1,7 @@
 package com.epesa.demo.controller;
 
 import com.epesa.demo.dto.AsistenciaResponseDTO;
+import com.epesa.demo.dto.DashboardSummaryDto;
 import com.epesa.demo.model.Empleado;
 import com.epesa.demo.service.AdminDashboardService;
 import lombok.RequiredArgsConstructor;
@@ -29,11 +30,19 @@ public class AdminDashboardController {
         return ResponseEntity.ok(dashboardService.obtenerExcepciones(admin));
     }
 
+    @GetMapping("/excepciones/historial")
+    public ResponseEntity<List<AsistenciaResponseDTO>> obtenerHistorial(@AuthenticationPrincipal Empleado admin) {
+        return ResponseEntity.ok(dashboardService.obtenerHistorialExcepciones(admin));
+    }
+
+    @GetMapping("/resumen")
+    public DashboardSummaryDto resumen() { return dashboardService.obtenerResumen(); }
+
     @PatchMapping("/excepciones/{id}/resolver")
     public ResponseEntity<AsistenciaResponseDTO> resolverExcepcion(
             @PathVariable UUID id,
             @RequestParam boolean aprobar,
-            @RequestParam(required = false) String nota) {
+            @RequestParam String nota) {
         return ResponseEntity.ok(dashboardService.resolverExcepcion(id, aprobar, nota));
     }
 }
