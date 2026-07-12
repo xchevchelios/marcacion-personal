@@ -1,0 +1,8 @@
+backups/
+secrets/
+*.env
+!.env.example
+backend/
+frontend-svelte/
+frontend/
+simuladores/

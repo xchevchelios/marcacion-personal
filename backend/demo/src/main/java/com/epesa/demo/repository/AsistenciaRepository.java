@@ -14,6 +14,7 @@ public interface AsistenciaRepository extends JpaRepository<Asistencia, UUID> {
     // Para Jefes de Obra (Busca asistencias solo en una lista de sus obras)
     List<Asistencia> findByObraIdIn(List<String> obraIds);
     List<Asistencia> findByRequiereRevisionAndObraIdIn(boolean requiereRevision, List<String> obraIds);
+    boolean existsByEventId(UUID eventId);
     boolean existsByEmpleadoIdAndObraIdAndTipoMarcacionAndFechaHoraRealBetween(
             UUID empleadoId, String obraId, String tipoMarcacion, LocalDateTime desde, LocalDateTime hasta);
     List<Asistencia> findByEstadoRevisionNotOrderByFechaResolucionDesc(String estadoRevision);

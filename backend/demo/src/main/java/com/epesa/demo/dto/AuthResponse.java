@@ -10,6 +10,8 @@ import lombok.Data;
 @Builder
 public class AuthResponse {
     private String token;
+    // Identificador funcional visible en la aplicación móvil.
+    private String empleadoId;
     private String nombreCompleto;
     private Rol rol;
     private TipoContrato tipoContrato;

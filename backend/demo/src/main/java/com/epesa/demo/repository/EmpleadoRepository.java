@@ -8,6 +8,7 @@ import com.epesa.demo.model.enums.Rol;
 
 public interface EmpleadoRepository extends JpaRepository<Empleado, UUID> {
     Optional<Empleado> findByCorreo(String correo);
+    Optional<Empleado> findByDocumentoIdentidad(String documentoIdentidad);
     boolean existsByCorreoIgnoreCase(String correo);
     boolean existsByCorreoIgnoreCaseAndIdNot(String correo, UUID id);
     boolean existsByDocumentoIdentidad(String documentoIdentidad);

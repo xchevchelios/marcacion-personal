@@ -25,6 +25,7 @@ public class AuthService {
                 .orElseThrow(() -> new IllegalStateException("Empleado autenticado no encontrado"));
         return AuthResponse.builder()
                 .token(jwtService.generateToken(empleado))
+                .empleadoId(empleado.getDocumentoIdentidad())
                 .nombreCompleto(empleado.getNombreCompleto())
                 .rol(empleado.getRol())
                 .tipoContrato(empleado.getTipoContrato())
