@@ -35,4 +35,15 @@ public class AsistenciaResponseDTO {
     private String notaResolucion;
     private String resueltoPor;
     private LocalDateTime fechaResolucion;
+
+    // Marcacion por terminal facial
+    private String metodoMarcacion;
+    private String terminalId;
+    private Double confidenceScore;
+    private Double precisionMetros;
+    private String biometricModel;
+    private String padronVersion;
+    private String evidenciaBucket;
+    private String evidenciaObjectName;
+    private String evidenciaContentType;
 }

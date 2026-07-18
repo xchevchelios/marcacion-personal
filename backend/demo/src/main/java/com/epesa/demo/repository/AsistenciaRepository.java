@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.List;
+import java.util.Optional;
 
 public interface AsistenciaRepository extends JpaRepository<Asistencia, UUID> {
 
@@ -17,6 +18,8 @@ public interface AsistenciaRepository extends JpaRepository<Asistencia, UUID> {
     boolean existsByEventId(UUID eventId);
     boolean existsByEmpleadoIdAndObraIdAndTipoMarcacionAndFechaHoraRealBetween(
             UUID empleadoId, String obraId, String tipoMarcacion, LocalDateTime desde, LocalDateTime hasta);
+    Optional<Asistencia> findTopByEmpleadoIdAndObraIdAndFechaHoraRealBetweenOrderByFechaHoraRealDesc(
+            UUID empleadoId, String obraId, LocalDateTime desde, LocalDateTime hasta);
     List<Asistencia> findByEstadoRevisionNotOrderByFechaResolucionDesc(String estadoRevision);
     long countByFechaHoraRealBetween(LocalDateTime desde, LocalDateTime hasta);
     long countByRequiereRevisionTrue();

@@ -25,4 +25,13 @@ public class Asistencia {
     @Column(length = 1000) private String notaResolucion;
     private String resueltoPor;
     private LocalDateTime fechaResolucion;
+    @Column(length = 40) @Builder.Default private String metodoMarcacion = "MOVIL";
+    @Column(length = 120) private String terminalId;
+    private Double confidenceScore;
+    private Double precisionMetros;
+    @Column(length = 80) private String biometricModel;
+    @Column(length = 120) private String padronVersion;
+    @Column(length = 255) private String evidenciaBucket;
+    @Column(length = 500) private String evidenciaObjectName;
+    @Column(length = 120) private String evidenciaContentType;
 }

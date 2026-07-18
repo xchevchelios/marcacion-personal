@@ -68,6 +68,10 @@ public class AdminDashboardService {
                 .deviceId(a.getDeviceId()).fechaHoraReal(a.getFechaHoraReal()).tipoMarcacion(a.getTipoMarcacion())
                 .horaEntrada("ENTRADA".equals(a.getTipoMarcacion()) ? a.getFechaHoraReal() : null).horaSalida("SALIDA".equals(a.getTipoMarcacion()) ? a.getFechaHoraReal() : null)
                 .requiereRevision(a.isRequiereRevision()).motivoRevision(a.getMotivoRevision()).estadoRevision(a.getEstadoRevision())
-                .notaResolucion(a.getNotaResolucion()).resueltoPor(a.getResueltoPor()).fechaResolucion(a.getFechaResolucion()).build();
+                .notaResolucion(a.getNotaResolucion()).resueltoPor(a.getResueltoPor()).fechaResolucion(a.getFechaResolucion())
+                .metodoMarcacion(a.getMetodoMarcacion()).terminalId(a.getTerminalId()).confidenceScore(a.getConfidenceScore())
+                .precisionMetros(a.getPrecisionMetros()).biometricModel(a.getBiometricModel()).padronVersion(a.getPadronVersion())
+                .evidenciaBucket(a.getEvidenciaBucket()).evidenciaObjectName(a.getEvidenciaObjectName())
+                .evidenciaContentType(a.getEvidenciaContentType()).build();
     }
 }
